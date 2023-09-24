@@ -69,13 +69,14 @@ async def _(
     event: PrivateMessageEvent
     | GroupMessageEvent = Depends(getChecker(checkBalance)),  # type:ignore
 ):
-    response = httpx.get(
-        urljoin(config.chatgpt_api, "../dashboard/billing/credit_grants"),
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {config.chatgpt_key}",
-        },
-    )
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            urljoin(config.chatgpt_api, "../dashboard/billing/credit_grants"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {config.chatgpt_key}",
+            },
+        )
     message = Message(
         [
             *(
@@ -97,7 +98,7 @@ async def _(
 
 # 清除历史
 
-cleanHistory = on_command("清除历史", aliases={"失忆"}, priority=1, block=True)
+cleanHistory = on_command("清除历史", aliases={"失忆"}, priority=2, block=True)
 
 
 @cleanHistory.handle()
