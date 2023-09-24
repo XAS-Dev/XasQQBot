@@ -21,7 +21,7 @@ sub_plugins = nonebot.load_plugins(
 )
 
 
-message = on_message(priority=1)
+message = on_message(priority=1, block=False)
 
 
 @message.handle()
