@@ -34,10 +34,18 @@ async def _(event: GroupMessageEvent):
         return
     bot: Bot = get_bot()  # type: ignore
 
-    async with httpx.AsyncClient(timeout=60) as client:
-        response = await client.get(
-            f"https://opengraph.githubassets.com/{hashlib.sha256(str(time.time()).encode())}/{result[0]}"
-        )
+    async with httpx.AsyncClient(
+        timeout=60, verify=not Config.github_card_host_mode
+    ) as client:
+        if Config.github_card_host_mode:
+            response = await client.get(
+                f"https://opengraph.githubassets.com/{hashlib.sha256(str(time.time()).encode())}/{result[0]}"
+            )
+        else:
+            response = await client.get(
+                f"https://{Config.github_card_githubassets_host}/{hashlib.sha256(str(time.time()).encode())}/{result[0]}",
+                headers={"Host": "opengraph.githubassets.com"},
+            )
         await bot.send_group_message(
             event.peerUin, MessageSegment.image(response.content)  # type: ignore
         )
