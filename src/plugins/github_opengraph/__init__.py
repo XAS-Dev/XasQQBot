@@ -27,7 +27,7 @@ message = on_message(priority=1, block=False)
 @message.handle()
 async def _(event: GroupMessageEvent):
     result = re.findall(
-        r"(?:https://|http://)?github.com/([a-zA-Z0-9\-/]+/[a-zA-Z0-9\-]+)",
+        r"(?:https://|http://|^|(?![a-zA-Z0-9-._]))github.com/([a-zA-Z0-9-]+/[a-zA-Z0-9-.]+)",
         event.get_plaintext(),
     )
     if not result:
