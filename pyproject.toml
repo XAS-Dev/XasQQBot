@@ -13,6 +13,7 @@ dependencies = [
     "nonebot2[fastapi,httpx,websockets]>=2.1.0",
     "nonebot-adapter-red>=0.4.2",
     "pillow>=10.0.1",
+    "nb-cli>=1.2.5",
 ]
 license = {text = "MIT"}
 
