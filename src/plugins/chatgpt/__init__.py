@@ -16,16 +16,8 @@ from .chatGpt import chatGpt
 global_config = get_driver().config
 config = Config.parse_obj(global_config)
 
-# sub_plugins = nonebot.load_plugins(
-#     str(Path(__file__).parent.joinpath("plugins").resolve())
-# )
-
-# print(global_config)
-
 
 # 获取检查器
-
-
 def getChecker(matcher: Matcher):
     async def checkGroup(
         event: PrivateMessageEvent | GroupMessageEvent,
@@ -47,8 +39,6 @@ def getChecker(matcher: Matcher):
 
 
 # 获取标识id
-
-
 def getIdentifying(event: PrivateMessageEvent | GroupMessageEvent):
     match event.__class__.__name__:
         case "GroupMessageEvent":
@@ -60,7 +50,6 @@ def getIdentifying(event: PrivateMessageEvent | GroupMessageEvent):
 
 
 # 获取余额
-
 checkBalance = on_command("余额", block=True)
 
 
@@ -97,7 +86,6 @@ async def _(
 
 
 # 清除历史
-
 cleanHistory = on_command("清除历史", aliases={"失忆"}, priority=2, block=True)
 
 
@@ -129,7 +117,6 @@ async def _(
 
 
 # 获取完整历史记录
-
 getHistory = on_command("完整历史记录", priority=1, block=True)
 
 
@@ -153,7 +140,6 @@ async def _(
 
 
 # 聊天
-
 chat = on_message(rule=to_me(), priority=2)
 
 
