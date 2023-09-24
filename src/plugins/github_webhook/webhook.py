@@ -36,7 +36,7 @@ def verify_signature(payload_body, secret_token: str, signature_header: str):
 async def githubWebhook(request: Request):
     if verify_signature(
         request.content,
-        config.webhook_secret_token,
+        config.github_webhook_secret_token,
         request.headers.get("x-hub-signature-256"),  # type: ignore
     ):
         data = json.loads(request.content)  # type: ignore
