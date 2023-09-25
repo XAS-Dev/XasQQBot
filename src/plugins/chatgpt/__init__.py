@@ -97,7 +97,7 @@ async def _(
     record = chatGpt.conversationRecord.get(getIdentifying(event))  # type: ignore
     length = len(record["conversation"] or [])  # type: ignore
     if record:
-        chatGpt.conversationRecord.get(getIdentifying(event))["conversation"] = []    # type: ignore # noqa: E501
+        chatGpt.conversationRecord.get(getIdentifying(event))["conversation"] = []  # type: ignore # noqa: E501
         chatGpt.save()
     message = Message(
         [
