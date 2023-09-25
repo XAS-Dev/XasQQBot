@@ -31,20 +31,6 @@ class ChatGPT:
             self.conversationRecord[userId]["conversation"] = []
             self.save()
 
-    def reduceConversation(self, userId):
-        # 修剪历史记录长度
-        value = self.conversationRecord[userId]
-        conversation = value["conversation"]  # type: list
-        length = 0
-        newList = []
-        for i in reversed(conversation):
-            length += len(i)
-            if length >= config.chatgpt_maxlength:  # 超过长度限制,不再记录
-                return
-            newList.append(i)
-        newList.reverse()
-        self.conversationRecord[userId]["conversation"] = newList
-
     async def chat(self, userId: str, msg: str) -> tuple[str | None, Exception | None]:
         # 加锁等待上一个完成
         if userId not in self.chatLocks:
@@ -58,7 +44,6 @@ class ChatGPT:
                 "last_time": datetime.now(),
             }
         self.checkConversationTimeout(userId)
-        self.reduceConversation(userId)
 
         # 复制纪录,成功则用复制的记录更改原纪录,失败则仍使用原纪录
         tempList = self.conversationRecord[userId]["conversation"].copy()

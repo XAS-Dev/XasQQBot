@@ -2,7 +2,7 @@ from urllib.parse import urljoin
 
 from nonebot import get_driver
 from nonebot.log import logger
-from nonebot.rule import Rule, to_me
+from nonebot.rule import to_me
 from nonebot.params import EventPlainText, Depends
 from nonebot.plugin.on import on_message, on_command
 from nonebot.internal.matcher.matcher import Matcher
