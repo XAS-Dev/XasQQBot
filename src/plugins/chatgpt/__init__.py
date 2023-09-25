@@ -92,12 +92,12 @@ cleanHistory = on_command("清除历史", aliases={"失忆"}, priority=2, block=
 @cleanHistory.handle()
 async def _(
     event: PrivateMessageEvent
-    | GroupMessageEvent = Depends(getChecker(checkBalance)),  # type:ignore
+    | GroupMessageEvent = Depends(getChecker(checkBalance)),  # type: ignore
 ):
-    conversation = chatGpt.conversationRecord.get(getIdentifying(event))  # type: ignore
-    length = len(conversation or [])
-    if conversation:
-        chatGpt.conversationRecord.get(getIdentifying(event))["conversation"] = []  # type: ignore  # noqa: E501
+    record = chatGpt.conversationRecord.get(getIdentifying(event))  # type: ignore
+    length = len(record["conversation"] or [])  # type:ignore
+    if record:
+        chatGpt.conversationRecord.get(getIdentifying(event))["conversation"] = []    # type: ignore # noqa: E501
         chatGpt.save()
     message = Message(
         [
