@@ -39,6 +39,4 @@ async def _(event: GroupMessageEvent):
             response = await client.get(
                 f"https://opengraph.githubassets.com/{hashlib.sha256(str(time.time()).encode())}/{result[0]}"
             )
-        await bot.send_group_message(
-            event.peerUin, MessageSegment.image(response.content)  # type: ignore
-        )
+        await message.send(MessageSegment.image(response.content))
