@@ -2,7 +2,7 @@ from urllib.parse import urljoin
 
 from nonebot import get_driver
 from nonebot.log import logger
-from nonebot.rule import to_me
+from nonebot.rule import Rule, to_me
 from nonebot.params import EventPlainText, Depends
 from nonebot.plugin.on import on_message, on_command
 from nonebot.internal.matcher.matcher import Matcher
@@ -19,23 +19,23 @@ config = Config.parse_obj(global_config)
 
 # 获取检查器
 def getChecker(matcher: Matcher):
-    async def checkGroup(
+    async def checkUser(
         event: PrivateMessageEvent | GroupMessageEvent,
     ) -> PrivateMessageEvent | GroupMessageEvent:
-        match event.__class__.__name__:
-            case "GroupMessageEvent":
+        match event.get_event_name():
+            case "message.group":
                 if str(event.peerUin) not in config.chatgpt_enable_group:
                     logger.debug("不允许的群聊")
                     await matcher.finish()
                 return event
-            case "PrivateMessageEvent":
+            case "message.private":
                 if str(event.senderUin) not in config.chatgpt_enable_user:
                     logger.debug("不允许的用户")
                     await matcher.finish("权限不足")
         return event
 
-    # return checkGroup
-    return lambda event: event
+    return checkUser
+    # return lambda event: event
 
 
 # 获取标识id
@@ -97,7 +97,9 @@ async def _(
     length = len(
         chatGpt.conversationRecord.get(getIdentifying(event), [0])  # type:ignore
     )
-    chatGpt.conversationRecord[getIdentifying(event)] = []  # type:ignore
+    chatGpt.conversationRecord[getIdentifying(event)][  # type:ignore
+        "conversation"
+    ] = []
     chatGpt.save()
     message = Message(
         [
@@ -149,6 +151,8 @@ async def _(
     | GroupMessageEvent = Depends(getChecker(chat)),  # type:ignore
     message: str = EventPlainText(),
 ):
+    if len(message) >= 1 and message[0] in global_config.command_start:
+        return
     logger.info("开始向ChatGPT提问")
     answer, error = await chatGpt.chat(getIdentifying(event), message)  # type:ignore
     logger.info("提问完成")
