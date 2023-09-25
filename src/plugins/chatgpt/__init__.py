@@ -56,7 +56,7 @@ checkBalance = on_command("余额", block=True)
 @checkBalance.handle()
 async def _(
     event: PrivateMessageEvent
-    | GroupMessageEvent = Depends(getChecker(checkBalance)),  # type:ignore
+    | GroupMessageEvent = Depends(getChecker(checkBalance)),  # type: ignore
 ):
     async with httpx.AsyncClient() as client:
         response = await client.get(
@@ -95,7 +95,7 @@ async def _(
     | GroupMessageEvent = Depends(getChecker(checkBalance)),  # type: ignore
 ):
     record = chatGpt.conversationRecord.get(getIdentifying(event))  # type: ignore
-    length = len(record["conversation"] or [])  # type:ignore
+    length = len(record["conversation"] or [])  # type: ignore
     if record:
         chatGpt.conversationRecord.get(getIdentifying(event))["conversation"] = []    # type: ignore # noqa: E501
         chatGpt.save()
@@ -123,13 +123,13 @@ getHistory = on_command("完整历史记录", priority=1, block=True)
 @getHistory.handle()
 async def _(
     event: PrivateMessageEvent
-    | GroupMessageEvent = Depends(getChecker(getHistory)),  # type:ignore
+    | GroupMessageEvent = Depends(getChecker(getHistory)),  # type: ignore
 ):
     translateDict = {"user": "用户", "assistant": "XAS bot"}
     count = 0  # 总长
     result = Message()
     result.append("历史记录:\n")
-    for i in chatGpt.conversationRecord[getIdentifying(event)]:  # type:ignore
+    for i in chatGpt.conversationRecord[getIdentifying(event)]:  # type: ignore
         result.append(
             MessageSegment.text(f"{translateDict[i['role']]}: {i['content']}")
         ).append("\n")
@@ -146,13 +146,13 @@ chat = on_message(rule=to_me(), priority=2)
 @chat.handle()
 async def _(
     event: PrivateMessageEvent
-    | GroupMessageEvent = Depends(getChecker(chat)),  # type:ignore
+    | GroupMessageEvent = Depends(getChecker(chat)),  # type: ignore
     message: str = EventPlainText(),
 ):
     if len(message) >= 1 and message[0] in global_config.command_start:
         return
     logger.info("开始向ChatGPT提问")
-    answer, error = await chatGpt.chat(getIdentifying(event), message)  # type:ignore
+    answer, error = await chatGpt.chat(getIdentifying(event), message)  # type: ignore
     logger.info("提问完成")
     if not answer:
         await chat.finish(f"错误: {error.__class__.__name__}: {str(error)}")

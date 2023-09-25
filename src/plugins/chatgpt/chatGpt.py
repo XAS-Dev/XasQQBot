@@ -64,7 +64,7 @@ class ChatGPT:
             self.chatLocks[userId].release()  # 解锁
 
         # 提问成功,获取结果并修改纪录
-        answer = response.choices[0].message["content"]  # type:ignore
+        answer = response.choices[0].message["content"]  # type: ignore
         tempList.append({"role": "assistant", "content": answer})
         self.conversationRecord[userId]["conversation"] = tempList
         self.conversationRecord[userId]["last_time"] = datetime.now()

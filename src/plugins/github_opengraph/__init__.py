@@ -2,9 +2,8 @@ import re
 import hashlib
 import time
 
-from nonebot import get_driver, get_bot
+from nonebot import get_driver
 from nonebot.plugin.on import on_message
-from nonebot.adapters.red.bot import Bot
 from nonebot.adapters.red.event import GroupMessageEvent
 from nonebot.adapters.red.message import MessageSegment
 import httpx
@@ -25,7 +24,6 @@ async def _(event: GroupMessageEvent):
     )
     if not result:
         return
-    bot: Bot = get_bot()  # type: ignore
 
     async with httpx.AsyncClient(
         timeout=60, verify=not config.github_card_host_mode
