@@ -94,13 +94,11 @@ async def _(
     event: PrivateMessageEvent
     | GroupMessageEvent = Depends(getChecker(checkBalance)),  # type:ignore
 ):
-    length = len(
-        chatGpt.conversationRecord.get(getIdentifying(event), [0])  # type:ignore
-    )
-    chatGpt.conversationRecord[getIdentifying(event)][  # type:ignore
-        "conversation"
-    ] = []
-    chatGpt.save()
+    conversation = chatGpt.conversationRecord.get(getIdentifying(event))  # type: ignore
+    length = len(conversation or [])
+    if conversation:
+        chatGpt.conversationRecord.get(getIdentifying(event))["conversation"] = []  # type: ignore  # noqa: E501
+        chatGpt.save()
     message = Message(
         [
             *(
