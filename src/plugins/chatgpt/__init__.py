@@ -117,7 +117,7 @@ async def _(
 
 
 # 获取完整历史记录
-getHistory = on_command("完整历史记录", priority=1, block=True)
+getHistory = on_command("历史记录", priority=1, block=True)
 
 
 @getHistory.handle()
@@ -129,13 +129,13 @@ async def _(
     count = 0  # 总长
     result = Message()
     result.append("历史记录:\n")
-    for i in chatGpt.conversationRecord[getIdentifying(event)]:  # type: ignore
+    for i in chatGpt.conversationRecord[getIdentifying(event)]["conversation"]:  # type: ignore  # noqa: E501
+        result.append("- ")
         result.append(
             MessageSegment.text(f"{translateDict[i['role']]}: {i['content']}")
-        ).append("\n")
+        ).append("\n\n")
         count += len(i["content"])  # 统计字数
-    result.append("\n")
-    result.append(f"共 {count} 字")
+    result.append(f"**共 {count} 字**")
     await getHistory.finish(result)
 
 
