@@ -11,7 +11,7 @@ import httpx
 from .config import Config
 
 global_config = get_driver().config
-config = Config.parse_obj(global_config)  # type: Config
+config = Config.parse_obj(global_config)
 
 message = on_message(priority=1, block=False)
 
@@ -26,11 +26,11 @@ async def _(event: GroupMessageEvent):
         return
 
     async with httpx.AsyncClient(
-        timeout=60, verify=not config.github_card_host_mode
+        timeout=60, verify=not config.github_card_host_mode  # type: ignore
     ) as client:
-        if config.github_card_host_mode:
+        if config.github_card_host_mode:  # type: ignore
             response = await client.get(
-                f"https://{config.github_card_githubassets_host}/{hashlib.sha256(str(time.time()).encode())}/{result[0]}",
+                f"https://{config.github_card_githubassets_host}/{hashlib.sha256(str(time.time()).encode())}/{result[0]}",  # type: ignore  # noqa: E501
                 headers={"Host": "opengraph.githubassets.com"},
             )
         else:
