@@ -25,8 +25,10 @@ class ChatGPT:
         self.load()
 
     def checkConversationTimeout(self, userId):
-        if self.conversationRecord[userId]["last_time"] < (
-            datetime.now() - timedelta(seconds=config.chatgpt_maxlength)
+        if not (
+            datetime.now() - timedelta(seconds=config.chatgpt_chat_time_limit)
+            < self.conversationRecord[userId]["last_time"]
+            < datetime.now()
         ):
             self.conversationRecord[userId]["conversation"] = []
             self.save()
@@ -39,6 +41,7 @@ class ChatGPT:
         await self.chatLocks[userId].acquire()  # 加锁
         # 没有记录,添加
         if userId not in self.conversationRecord:
+            print("not in")
             self.conversationRecord[userId] = {
                 "conversation": [],
                 "last_time": datetime.now(),
