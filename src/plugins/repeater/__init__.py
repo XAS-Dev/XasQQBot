@@ -32,7 +32,7 @@ def getMessageHash(message: Message):
                 )
             case _:
                 raise FinishedException
-    print(hashlib.sha256(" ".join(resultList).encode()).hexdigest())
+    # print(hashlib.sha256(" ".join(resultList).encode()).hexdigest())
     return hashlib.sha256(" ".join(resultList).encode()).hexdigest()
 
 
@@ -68,14 +68,20 @@ async def _(event: GroupMessageEvent):
     if config.probability_index_growth:  # type: ignore
         if (
             random.random()
-            < (repeaterDict[event.peerUin]["count"] ** 2) / config.repetitive_limit**2  # type: ignore  # noqa: E501
+            < ((repeaterDict[event.peerUin]["count"] - config.repetitive_minimum) ** 2)  # type: ignore  # noqa: E501
+            / (config.repetitive_limit - config.repetitive_minimum) ** 2  # type: ignore
         ) and not repeaterDict[event.peerUin]["is_repeated"]:
             # 复读的概率随指数级增长
             repeaterDict[event.peerUin]["is_repeated"] = True
             await message.send(event.get_message())
     else:
         if (
-            random.random() < repeaterDict[event.peerUin]["count"] / config.repetitive_limit  # type: ignore  # noqa: E501
+            (
+                random.random()
+                < repeaterDict[event.peerUin]["count"] - config.repetitive_minimum  # type: ignore  # noqa: E501
+            )
+            / config.repetitive_limit  # type: ignore
+            - config.repetitive_minimum  # type: ignore
             and not repeaterDict[event.peerUin]["is_repeated"]
         ):
             # 复读的概率线性增长
