@@ -1,7 +1,10 @@
 import random
+import hashlib
 
 from nonebot import get_driver, on_message
+from nonebot.exception import FinishedException
 from nonebot.adapters.red.event import GroupMessageEvent
+from nonebot.adapters.red.message import Message
 
 from .config import Config
 
@@ -11,6 +14,26 @@ config = Config.parse_obj(global_config)
 repeaterDict = {}
 
 message = on_message(block=False)
+
+
+def getMessageHash(message: Message):
+    resultList = []
+    for i in message:
+        match i.type:
+            case "text":
+                resultList.append(
+                    hashlib.sha256(("TEXT:" + str(i)).encode()).hexdigest()
+                )
+            case "image":
+                resultList.append(
+                    hashlib.sha256(
+                        ("IMAGE:" + i.data.get("md5", "")).encode()
+                    ).hexdigest()
+                )
+            case _:
+                raise FinishedException
+    print(hashlib.sha256(" ".join(resultList).encode()).hexdigest())
+    return hashlib.sha256(" ".join(resultList).encode()).hexdigest()
 
 
 @message.handle()
@@ -27,15 +50,15 @@ async def _(event: GroupMessageEvent):
 
     if event.peerUin not in repeaterDict:
         repeaterDict[event.peerUin] = {
-            "message": event.get_plaintext(),
+            "message_hash": getMessageHash(event.get_message()),
             "count": 1,
             "is_repeated": False,
         }
-    elif repeaterDict[event.peerUid]["message"] == event.get_plaintext():  # noqa: E501
+    elif repeaterDict[event.peerUid]["message_hash"] == getMessageHash(event.get_message()):  # noqa: E501
         repeaterDict[event.peerUin]["count"] += 1
     else:
         repeaterDict[event.peerUin] = {
-            "message": event.get_plaintext(),
+            "message_hash": getMessageHash(event.get_message()),
             "count": 1,
             "is_repeated": False,
         }
