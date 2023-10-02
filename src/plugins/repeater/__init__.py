@@ -30,14 +30,19 @@ async def _(event: GroupMessageEvent):
             "is_repeated": False,
         }
 
-    # if (
-    #     random.random()
-    #     < (repeaterDict[event.peerUin]["count"] ** 2) / config.repetitive_limit**2
-    # ) and not repeaterDict[event.peerUin]["is_repeated"]:
-    #     # 复读的概率随指数级增长
-    if (
-        random.random() < repeaterDict[event.peerUin]["count"] / config.repetitive_limit
-        and not repeaterDict[event.peerUin]["is_repeated"]
-    ):
-        repeaterDict[event.peerUin]["is_repeated"] = True
-        await message.send(event.get_plaintext())
+    if config.probability_index_growth:  # type: ignore
+        if (
+            random.random()
+            < (repeaterDict[event.peerUin]["count"] ** 2) / config.repetitive_limit**2  # type: ignore  # noqa: E501
+        ) and not repeaterDict[event.peerUin]["is_repeated"]:
+            # 复读的概率随指数级增长
+            repeaterDict[event.peerUin]["is_repeated"] = True
+            await message.send(event.get_plaintext())
+    else:
+        if (
+            random.random() < repeaterDict[event.peerUin]["count"] / config.repetitive_limit  # type: ignore  # noqa: E501
+            and not repeaterDict[event.peerUin]["is_repeated"]
+        ):
+            # 复读的概率线性增长
+            repeaterDict[event.peerUin]["is_repeated"] = True
+            await message.send(event.get_plaintext())
