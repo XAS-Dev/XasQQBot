@@ -1,7 +1,6 @@
 import random
 
 from nonebot import get_driver, on_message
-from nonebot.adapters.red.bot import Bot
 from nonebot.adapters.red.event import GroupMessageEvent
 
 from .config import Config
