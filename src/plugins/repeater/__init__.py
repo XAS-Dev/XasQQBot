@@ -76,12 +76,9 @@ async def _(event: GroupMessageEvent):
             await message.send(event.get_message())
     else:
         if (
-            (
-                random.random()
-                < repeaterDict[event.peerUin]["count"] - config.repetitive_minimum  # type: ignore  # noqa: E501
-            )
-            / config.repetitive_limit  # type: ignore
-            - config.repetitive_minimum  # type: ignore
+            random.random()
+            < (repeaterDict[event.peerUin]["count"] - config.repetitive_minimum)  # type: ignore  # noqa: E501
+            / (config.repetitive_limit - config.repetitive_minimum)  # type: ignore
             and not repeaterDict[event.peerUin]["is_repeated"]
         ):
             # 复读的概率线性增长
