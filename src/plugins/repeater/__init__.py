@@ -1,6 +1,7 @@
 import random
 
 from nonebot import get_driver, on_message
+from nonebot.adapters.red.bot import Bot
 from nonebot.adapters.red.event import GroupMessageEvent
 
 from .config import Config
@@ -10,11 +11,21 @@ config = Config.parse_obj(global_config)
 
 repeaterDict = {}
 
-message = on_message()
+message = on_message(block=False)
 
 
 @message.handle()
 async def _(event: GroupMessageEvent):
+    # 忽略指令
+    if (
+        len(event.get_plaintext()) >= 1
+        and event.get_plaintext() in global_config.command_start
+    ):
+        return
+    # 忽略@
+    if event.to_me:
+        return
+
     if event.peerUin not in repeaterDict:
         repeaterDict[event.peerUin] = {
             "message": event.get_plaintext(),
