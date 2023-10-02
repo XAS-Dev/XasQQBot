@@ -54,7 +54,9 @@ async def _(event: GroupMessageEvent):
             "count": 1,
             "is_repeated": False,
         }
-    elif repeaterDict[event.peerUid]["message_hash"] == getMessageHash(event.get_message()):  # noqa: E501
+    elif repeaterDict[event.peerUid]["message_hash"] == getMessageHash(
+        event.get_message()
+    ):  # noqa: E501
         repeaterDict[event.peerUin]["count"] += 1
     else:
         repeaterDict[event.peerUin] = {
