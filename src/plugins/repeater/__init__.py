@@ -1,8 +1,10 @@
 import random
 import hashlib
+from typing import Any
 
-from nonebot import get_driver, on_message
+from nonebot import get_driver, get_bot, on_message
 from nonebot.exception import FinishedException
+from nonebot.adapters import Bot
 from nonebot.adapters.red.event import GroupMessageEvent
 from nonebot.adapters.red.message import Message
 
@@ -83,3 +85,25 @@ async def _(event: GroupMessageEvent):
             # 复读的概率线性增长
             repeaterDict[event.peerUin]["is_repeated"] = True
             await message.send(event.get_message())
+
+
+async def onCalledApi(
+    bot: Bot, exception: Exception | None, api: str, data: dict[str, Any], result: Any
+):
+    if api == "send_message" and exception is None:
+        if (
+            data["target"] in repeaterDict
+            and not repeaterDict[data["target"]]["is_repeated"]
+        ):
+            repeaterDict[data["target"]] = {
+                "message_hash": "",
+                "count": 1,
+                "is_repeated": False,
+            }
+
+
+async def onBotConnected():
+    get_bot().on_called_api(onCalledApi)
+
+
+get_driver().on_bot_connect(onBotConnected)
