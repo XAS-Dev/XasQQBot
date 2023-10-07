@@ -10,9 +10,8 @@ authors = [
 dependencies = [
     "openai>=0.28.1",
     "httpx>=0.25.0",
-    "nonebot2[fastapi,httpx,websockets]>=2.1.0",
+    "nonebot2[fastapi,httpx,websockets]>=2.1.1",
     "nonebot-adapter-red>=0.5.1",
-    "pillow>=10.0.1",
     "nb-cli>=1.2.5",
     "mcstatus>=11.0.1",
 ]

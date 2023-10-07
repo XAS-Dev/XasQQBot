@@ -1,6 +1,6 @@
 from urllib.parse import urljoin
 
-from nonebot import get_driver, require
+from nonebot import get_driver
 from nonebot.log import logger
 from nonebot.rule import to_me
 from nonebot.params import EventPlainText, Depends
