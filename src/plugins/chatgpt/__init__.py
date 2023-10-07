@@ -1,6 +1,6 @@
 from urllib.parse import urljoin
 
-from nonebot import get_driver
+from nonebot import get_driver, require
 from nonebot.log import logger
 from nonebot.rule import to_me
 from nonebot.params import EventPlainText, Depends
@@ -13,8 +13,14 @@ import httpx
 from .config import Config
 from .chatGpt import chatGpt
 
+require("mc_status")
+
+from src.plugins.mc_status import getStatus  # noqa: E402
+
 global_config = get_driver().config
 config = Config.parse_obj(global_config)
+
+lastMcStatus = {}
 
 
 # 获取检查器
@@ -149,21 +155,42 @@ async def _(
     | GroupMessageEvent = Depends(getChecker(chat)),  # type: ignore
     message: str = EventPlainText(),
 ):
+    # 判断不为指令
     if len(message) >= 1 and message[0] in global_config.command_start:
         return
-    logger.info("开始向ChatGPT提问")
 
-    logger.debug(
-        "ask ChatGPT: "
-        f"{event.sendNickName or event.sendMemberName}({event.get_user_id()}):"
+    identifying = getIdentifying(event)
+
+    # 生成状态提示
+    statusPrompt = None
+    try:
+        mcStatus = await getStatus()
+    except TimeoutError:
+        ...
+    else:
+        if identifying not in lastMcStatus:
+            lastMcStatus[identifying] = None
+        if mcStatus != lastMcStatus[identifying]:
+            lastMcStatus[identifying] = mcStatus
+            statusPrompt = (
+                f"状态改变了,你目前有{mcStatus['player']['online']}/{mcStatus['player']['max']}人在线"
+                + (
+                    f",他们分别为:{','.join(mcStatus['player']['sample'])}"  # type: ignore
+                    if mcStatus["player"].get("sample")
+                    else ""
+                )
+                + "。\n"  # type: ignore
+            )
+
+    # 开始提问
+    logger.info("开始向ChatGPT提问")
+    question = (
+        (statusPrompt or "")
+        + f"{event.sendNickName or event.sendMemberName}({event.get_user_id()}):"
         + message
     )
-    answer, error = await chatGpt.chat(
-        getIdentifying(event),  # type: ignore
-        f"{event.sendNickName or event.sendMemberName}({event.get_user_id()}):"
-        + message,
-    )
-
+    logger.debug("ask ChatGPT: " + question)
+    answer, error = await chatGpt.chat(identifying, question)  # type: ignore
     if not answer:
         resultMessage = f"错误：{error.__class__.__name__}: {str(error)}"
         logger.warning(resultMessage)

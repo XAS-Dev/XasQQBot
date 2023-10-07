@@ -14,6 +14,7 @@ dependencies = [
     "nonebot-adapter-red>=0.5.1",
     "pillow>=10.0.1",
     "nb-cli>=1.2.5",
+    "mcstatus>=11.0.1",
 ]
 license = {text = "MIT"}
 
