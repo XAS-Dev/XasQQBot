@@ -12,6 +12,8 @@ from .config import Config
 global_config = get_driver().config
 config = Config.parse_obj(global_config)
 
+formatDict = {"chatgpt_owner": config.chatgpt_owner}
+
 
 class ChatGPT:
     def __init__(self):
@@ -56,7 +58,13 @@ class ChatGPT:
         try:
             response = await openai.ChatCompletion.acreate(
                 model="gpt-3.5-turbo",
-                messages=[{"role": "system", "content": self.systemPrompt}, *tempList],
+                messages=[
+                    {
+                        "role": "system",
+                        "content": self.systemPrompt.format_map(formatDict),
+                    },
+                    *tempList,
+                ],
                 timeout=10,
             )
         except Exception as e:

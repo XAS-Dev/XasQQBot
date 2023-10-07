@@ -152,10 +152,24 @@ async def _(
     if len(message) >= 1 and message[0] in global_config.command_start:
         return
     logger.info("开始向ChatGPT提问")
-    answer, error = await chatGpt.chat(getIdentifying(event), message)  # type: ignore
-    logger.info("提问完成")
+
+    logger.debug(
+        "ask ChatGPT: "
+        f"{event.sendNickName or event.sendMemberName}({event.get_user_id()}):"
+        + message
+    )
+    answer, error = await chatGpt.chat(
+        getIdentifying(event),  # type: ignore
+        f"{event.sendNickName or event.sendMemberName}({event.get_user_id()}):"
+        + message,
+    )
+
     if not answer:
-        await chat.finish(f"错误: {error.__class__.__name__}: {str(error)}")
+        resultMessage = f"错误：{error.__class__.__name__}: {str(error)}"
+        logger.warning(resultMessage)
+        await chat.finish(resultMessage)
+    logger.debug("ChatGPT answered: " + answer)
+    logger.info("提问完成")
     resultMessage = Message(
         [
             *(
