@@ -62,8 +62,9 @@ class ChatGPT:
         statusPrompt = None
         try:
             mcStatus = await getStatus()
-        except TimeoutError:
-            ...
+        except Exception as e:
+            logger.error(e)
+            statusPrompt = f"状态改变了,目前暂时无法获取你的状态。错误原因是:{e}。如果有人询问你的状态请回答暂时发生了错误。\n"  # noqa: E501
         else:
             if (mcStatus != self.conversationRecord[userId]["mcstatus"]) or isTimeOut:
                 self.conversationRecord[userId]["mcstatus"] = mcStatus
