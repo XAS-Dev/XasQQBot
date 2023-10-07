@@ -13,10 +13,6 @@ import httpx
 from .config import Config
 from .chatGpt import chatGpt
 
-require("mc_status")
-
-from src.plugins.mc_status import getStatus  # noqa: E402
-
 global_config = get_driver().config
 config = Config.parse_obj(global_config)
 
@@ -104,6 +100,7 @@ async def _(
     length = len(record["conversation"] or [])  # type: ignore
     if record:
         chatGpt.conversationRecord.get(getIdentifying(event))["conversation"] = []  # type: ignore # noqa: E501
+        chatGpt.conversationRecord.get(getIdentifying(event))["mcstatus"] = None # type: ignore
         chatGpt.save()
     message = Message(
         [
@@ -161,41 +158,17 @@ async def _(
 
     identifying = getIdentifying(event)
 
-    # 生成状态提示
-    statusPrompt = None
-    try:
-        mcStatus = await getStatus()
-    except TimeoutError:
-        ...
-    else:
-        if identifying not in lastMcStatus:
-            lastMcStatus[identifying] = None
-        if mcStatus != lastMcStatus[identifying]:
-            lastMcStatus[identifying] = mcStatus
-            statusPrompt = (
-                f"状态改变了,你目前有{mcStatus['player']['online']}/{mcStatus['player']['max']}人在线"
-                + (
-                    f",他们分别为:{','.join(mcStatus['player']['sample'])}"  # type: ignore
-                    if mcStatus["player"].get("sample")
-                    else ""
-                )
-                + "。\n"  # type: ignore
-            )
-
     # 开始提问
     logger.info("开始向ChatGPT提问")
     question = (
-        (statusPrompt or "")
-        + f"{event.sendNickName or event.sendMemberName}({event.get_user_id()}):"
+        f"{event.sendNickName or event.sendMemberName}({event.get_user_id()}):"
         + message
     )
-    logger.debug("ask ChatGPT: " + question)
     answer, error = await chatGpt.chat(identifying, question)  # type: ignore
     if not answer:
         resultMessage = f"错误：{error.__class__.__name__}: {str(error)}"
         logger.warning(resultMessage)
         await chat.finish(resultMessage)
-    logger.debug("ChatGPT answered: " + answer)
     logger.info("提问完成")
     resultMessage = Message(
         [
