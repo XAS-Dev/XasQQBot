@@ -1,4 +1,3 @@
-
 **/__pycache__/
 *.py[cod]
 *$py.class
@@ -139,6 +138,7 @@ dmypy.json
 .pdm-build/
 
 .env.dev
+.env.prod
 .vscode/
 accounts/
 conversation/
