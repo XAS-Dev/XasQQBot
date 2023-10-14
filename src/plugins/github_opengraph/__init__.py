@@ -45,3 +45,4 @@ async def _(event: GroupMessageEvent):
         githubOpenGraphMessages.data.append(  # type: ignore
             {"peerUin": sendResult.peerUin, "msgSeq": sendResult.msgSeq}
         )
+        githubOpenGraphMessages.save()
