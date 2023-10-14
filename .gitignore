@@ -140,7 +140,7 @@ dmypy.json
 .env.dev
 .env.prod
 .vscode/
+/data/
 accounts/
 conversation/
-data/
 test/
