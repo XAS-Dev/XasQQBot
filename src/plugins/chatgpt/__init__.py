@@ -12,6 +12,7 @@ import httpx
 
 from .config import Config
 from .chatGpt import chatGpt
+from ...data import githubOpenGraphMessages
 
 global_config = get_driver().config
 config = Config.parse_obj(global_config)
@@ -100,7 +101,7 @@ async def _(
     length = len(record["conversation"] or [])  # type: ignore
     if record:
         chatGpt.conversationRecord.get(getIdentifying(event))["conversation"] = []  # type: ignore # noqa: E501
-        chatGpt.conversationRecord.get(getIdentifying(event))["mcstatus"] = None # type: ignore
+        chatGpt.conversationRecord.get(getIdentifying(event))["mcstatus"] = None  # type: ignore
         chatGpt.save()
     message = Message(
         [
@@ -154,6 +155,9 @@ async def _(
 ):
     # 判断不为指令
     if len(message) >= 1 and message[0] in global_config.command_start:
+        return
+    # 排除回复github图片
+    if event.reply and {"msgSeq": event.reply.replayMsgSeq, "peerUin": event.peerUin} in githubOpenGraphMessages.data:  # type: ignore  # noqa: E501
         return
 
     identifying = getIdentifying(event)

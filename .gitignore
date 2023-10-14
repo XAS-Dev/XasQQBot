@@ -142,4 +142,5 @@ dmypy.json
 .vscode/
 accounts/
 conversation/
+data/
 test/

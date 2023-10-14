@@ -6,9 +6,11 @@ from nonebot import get_driver
 from nonebot.plugin.on import on_message
 from nonebot.adapters.red.event import GroupMessageEvent
 from nonebot.adapters.red.message import MessageSegment
+from nonebot.adapters.red.api.model import Message as MessageModel  # noqa: F401
 import httpx
 
 from .config import Config
+from ...data import githubOpenGraphMessages
 
 global_config = get_driver().config
 config = Config.parse_obj(global_config)
@@ -37,4 +39,9 @@ async def _(event: GroupMessageEvent):
             response = await client.get(
                 f"https://opengraph.githubassets.com/{hashlib.sha256(str(time.time()).encode())}/{result[0]}"
             )
-        await message.send(MessageSegment.image(response.content))
+        sendResult = await message.send(
+            MessageSegment.image(response.content)
+        )  # type: MessageModel
+        githubOpenGraphMessages.data.append(  # type: ignore
+            {"peerUin": sendResult.peerUin, "msgSeq": sendResult.msgSeq}
+        )
