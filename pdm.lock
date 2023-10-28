@@ -731,7 +731,7 @@ files = [
 
 [[package]]
 name = "nonebot-adapter-red"
-version = "0.5.1"
+version = "0.6.1"
 requires_python = ">=3.8"
 summary = "Red Protocol Adapter for Nonebot2"
 dependencies = [
@@ -739,8 +739,8 @@ dependencies = [
     "packaging>=23.1",
 ]
 files = [
-    {file = "nonebot_adapter_red-0.5.1-py3-none-any.whl", hash = "sha256:57d41547f4587cc140641cfb361766a34bde31b593690bf15841ad8cfaf3362b"},
-    {file = "nonebot_adapter_red-0.5.1.tar.gz", hash = "sha256:12dde60000f3827f1f9d2939ec71ba6fe7c9b71cbf04266612db10ab992bded9"},
+    {file = "nonebot_adapter_red-0.6.1-py3-none-any.whl", hash = "sha256:04c50c9f86f54f6c45e03aafe96db318b54a217af5f1f6d5f2ff92fd465ce901"},
+    {file = "nonebot_adapter_red-0.6.1.tar.gz", hash = "sha256:c38fd6e055b2f6e48b25aca1d35d5633443cd6d18a429b19f3df7cdc46d20107"},
 ]
 
 [[package]]
