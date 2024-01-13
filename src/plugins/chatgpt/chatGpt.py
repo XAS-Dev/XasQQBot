@@ -8,6 +8,7 @@ import asyncio
 from nonebot import get_driver, require
 from nonebot.log import logger
 import openai
+from openai import AsyncOpenAI
 
 from .config import Config
 
@@ -40,8 +41,6 @@ formatDict = {
 
 class ChatGPT:
     def __init__(self):
-        openai.api_base = config.chatgpt_api
-        openai.api_key = config.chatgpt_key
         self.conversationRecordList: dict[str, ConversationRecord] = {}
         self.chatLocks: dict[str, asyncio.Lock] = {}
         self.systemPrompt: str = config.chatgpt_system_prompt
@@ -93,9 +92,7 @@ class ChatGPT:
                 f"状态改变了,目前暂时无法获取你的状态。错误原因是:{e}。如果有人询问你的状态请回答暂时发生了错误。\n"  # noqa: E501
             )
         else:
-            if (
-                mcStatus != self.getRecord(userId)["mcstatus"]
-            ) or isTimeOut:
+            if (mcStatus != self.getRecord(userId)["mcstatus"]) or isTimeOut:
                 self.getRecord(userId)["mcstatus"] = mcStatus
                 statusPrompt = (
                     f"状态改变了,根据最新状态你目前有{mcStatus['player']['online']}/{mcStatus['player']['max']}人在线"
@@ -116,7 +113,10 @@ class ChatGPT:
         logger.debug(f"\nasked ChatGPT:\n{msg}")
         startTime = time.time()
         try:
-            response = await openai.ChatCompletion.acreate(
+            client = AsyncOpenAI(
+                api_key=config.chatgpt_key, base_url=config.chatgpt_api
+            )
+            response = await client.chat.completions.create(
                 model=self.getRecord(userId)["model"],
                 messages=[
                     {
@@ -135,7 +135,7 @@ class ChatGPT:
             self.chatLocks[userId].release()  # 解锁
 
         # 提问成功,获取结果并修改纪录
-        answer = response.choices[0].message["content"]  # type: ignore
+        answer = response.choices[0].message.content  # type: ignore
         tempList.append({"role": "assistant", "content": answer})
         self.getRecord(userId)["conversation"] = tempList
         self.getRecord(userId)["last_time"] = datetime.now()
@@ -144,7 +144,7 @@ class ChatGPT:
             "\n"
             f"ChatGPT answered:\n{answer}\n"
             f"-> spend time:\t {time.time() - startTime:.2f}s\n"
-            f"-> spend token:\t {response['usage']['total_tokens']}"  # type: ignore
+            f"-> spend token:\t {response.usage.total_tokens}"  # type: ignore
         )
         return answer, None
 
