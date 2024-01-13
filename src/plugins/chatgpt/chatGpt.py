@@ -89,7 +89,7 @@ class ChatGPT:
         tempList.append({"role": "user", "content": msg})
 
         # 开始提问
-        logger.debug(f"ask ChatGPT:\n{msg}")
+        logger.debug(f"\nasked ChatGPT:\n{msg}")
         startTime = time.time()
         try:
             response = await openai.ChatCompletion.acreate(
@@ -117,9 +117,10 @@ class ChatGPT:
         self.conversationRecord[userId]["last_time"] = datetime.now()
         self.save()  # 保存
         logger.debug(
+            "\n"
             f"ChatGPT answered:\n{answer}\n"
-            f"spend time:\t {time.time() - startTime:.2f}s\n"
-            f"spend token:\t {response['usage']['total_tokens']}"  # type: ignore
+            f"-> spend time:\t {time.time() - startTime:.2f}s\n"
+            f"-> spend token:\t {response['usage']['total_tokens']}"  # type: ignore
         )
         return answer, None
 
