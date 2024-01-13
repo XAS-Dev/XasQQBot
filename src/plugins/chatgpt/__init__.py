@@ -97,11 +97,11 @@ async def _(
     event: PrivateMessageEvent
     | GroupMessageEvent = Depends(getChecker(checkBalance)),  # type: ignore
 ):
-    record = chatGpt.conversationRecord.get(getIdentifying(event))  # type: ignore
+    record = chatGpt.conversationRecordList.get(getIdentifying(event))  # type: ignore
     length = len(record["conversation"] or [])  # type: ignore
     if record:
-        chatGpt.conversationRecord.get(getIdentifying(event))["conversation"] = []  # type: ignore # noqa: E501
-        chatGpt.conversationRecord.get(getIdentifying(event))["mcstatus"] = None  # type: ignore
+        chatGpt.conversationRecordList.get(getIdentifying(event))["conversation"] = []  # type: ignore # noqa: E501
+        chatGpt.conversationRecordList.get(getIdentifying(event))["mcstatus"] = None  # type: ignore
         chatGpt.save()
     message = Message(
         [
@@ -133,7 +133,7 @@ async def _(
     count = 0  # 总长
     result = Message()
     result.append("历史记录:\n")
-    for i in chatGpt.conversationRecord[getIdentifying(event)]["conversation"]:  # type: ignore  # noqa: E501
+    for i in chatGpt.conversationRecordList[getIdentifying(event)]["conversation"]:  # type: ignore  # noqa: E501
         result.append("- ")
         result.append(
             MessageSegment.text(f"{translateDict[i['role']]}: {i['content']}")
