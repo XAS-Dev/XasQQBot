@@ -26,6 +26,7 @@ class ConversationRecord(TypedDict):
     conversation: list
     last_time: datetime
     mcstatus: Optional[McStatus]
+    model: str
 
 
 global_config = get_driver().config
@@ -51,20 +52,15 @@ class ChatGPT:
     def checkConversationTimeout(self, userId):
         if not (
             datetime.now() - timedelta(seconds=config.chatgpt_chat_time_limit)
-            < self.conversationRecordList[userId]["last_time"]
+            < self.getRecord(userId)["last_time"]
             < datetime.now()
         ):
-            self.conversationRecordList[userId]["conversation"] = []
+            self.getRecord(userId)["conversation"] = []
             self.save()
             return True
         return False
 
-    async def chat(self, userId: str, msg: str) -> tuple[str | None, Exception | None]:
-        # 加锁等待上一个完成
-        if userId not in self.chatLocks:
-            # 没锁，新建一个
-            self.chatLocks[userId] = asyncio.Lock()
-        await self.chatLocks[userId].acquire()  # 加锁
+    def getRecord(self, userId):
         # 没有记录,添加
         if userId not in self.conversationRecordList:
             # print("not in")
@@ -72,7 +68,19 @@ class ChatGPT:
                 "conversation": [],
                 "last_time": datetime.now(),
                 "mcstatus": None,
+                "model": "gpt-3.5-turbo",
             }
+        return self.conversationRecordList[userId]
+
+    async def chat(
+        self, userId: str, msg: str
+    ) -> tuple[Optional[str], Optional[Exception]]:
+        # 加锁等待上一个完成
+        if userId not in self.chatLocks:
+            # 没锁，新建一个
+            self.chatLocks[userId] = asyncio.Lock()
+        await self.chatLocks[userId].acquire()  # 加锁
+
         isTimeOut = self.checkConversationTimeout(userId)
 
         # 生成状态提示
@@ -86,9 +94,9 @@ class ChatGPT:
             )
         else:
             if (
-                mcStatus != self.conversationRecordList[userId]["mcstatus"]
+                mcStatus != self.getRecord(userId)["mcstatus"]
             ) or isTimeOut:
-                self.conversationRecordList[userId]["mcstatus"] = mcStatus
+                self.getRecord(userId)["mcstatus"] = mcStatus
                 statusPrompt = (
                     f"状态改变了,根据最新状态你目前有{mcStatus['player']['online']}/{mcStatus['player']['max']}人在线"
                     + (
@@ -101,7 +109,7 @@ class ChatGPT:
         msg = (statusPrompt or "") + msg
 
         # 复制纪录,成功则用复制的记录更改原纪录,失败则仍使用原纪录
-        tempList = self.conversationRecordList[userId]["conversation"].copy()
+        tempList = self.getRecord(userId)["conversation"].copy()
         tempList.append({"role": "user", "content": msg})
 
         # 开始提问
@@ -109,7 +117,7 @@ class ChatGPT:
         startTime = time.time()
         try:
             response = await openai.ChatCompletion.acreate(
-                model="gpt-3.5-turbo",
+                model=self.getRecord(userId)["model"],
                 messages=[
                     {
                         "role": "system",
@@ -129,8 +137,8 @@ class ChatGPT:
         # 提问成功,获取结果并修改纪录
         answer = response.choices[0].message["content"]  # type: ignore
         tempList.append({"role": "assistant", "content": answer})
-        self.conversationRecordList[userId]["conversation"] = tempList
-        self.conversationRecordList[userId]["last_time"] = datetime.now()
+        self.getRecord(userId)["conversation"] = tempList
+        self.getRecord(userId)["last_time"] = datetime.now()
         self.save()  # 保存
         logger.debug(
             "\n"

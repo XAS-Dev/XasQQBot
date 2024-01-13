@@ -24,3 +24,4 @@ class Config(BaseModel, extra=Extra.ignore):
         "如果有人问到关于编程等学术的问题的时候请使用较为正式的口吻。"
     )
     chatgpt_chat_time_limit: int
+    chatgpt_default_model = "gpt-3.5-turbo"
