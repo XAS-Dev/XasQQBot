@@ -17,7 +17,10 @@ from src.plugins.mc_status import getStatus  # noqa: E402
 global_config = get_driver().config
 config = Config.parse_obj(global_config)
 
-formatDict = {"chatgpt_owner": config.chatgpt_owner}
+formatDict = {
+    "chatgpt_owner_uid": config.chatgpt_owner_uid,
+    "chatgpt_owner_nickname": config.chatgpt_owner_nickname,
+}
 
 
 class ChatGPT:
@@ -64,7 +67,9 @@ class ChatGPT:
             mcStatus = await getStatus()
         except Exception as e:
             logger.error(e)
-            statusPrompt = f"状态改变了,目前暂时无法获取你的状态。错误原因是:{e}。如果有人询问你的状态请回答暂时发生了错误。\n"  # noqa: E501
+            statusPrompt = (
+                f"状态改变了,目前暂时无法获取你的状态。错误原因是:{e}。如果有人询问你的状态请回答暂时发生了错误。\n"  # noqa: E501
+            )
         else:
             if (mcStatus != self.conversationRecord[userId]["mcstatus"]) or isTimeOut:
                 self.conversationRecord[userId]["mcstatus"] = mcStatus
