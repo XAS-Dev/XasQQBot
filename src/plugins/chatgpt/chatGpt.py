@@ -7,7 +7,6 @@ import asyncio
 
 from nonebot import get_driver, require
 from nonebot.log import logger
-import openai
 from openai import AsyncOpenAI
 
 from .config import Config
