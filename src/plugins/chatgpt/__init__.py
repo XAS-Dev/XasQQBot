@@ -54,7 +54,7 @@ def getIdentifying(event: PrivateMessageEvent | GroupMessageEvent):
 
 
 # 获取余额
-checkBalance = on_command("余额", block=True)
+checkBalance = on_command("余额")
 
 
 @checkBalance.handle()
@@ -90,7 +90,7 @@ async def _(
 
 
 # 清除历史
-cleanHistory = on_command("清除历史", aliases={"失忆"}, priority=2, block=True)
+cleanHistory = on_command("清除历史", aliases={"失忆"})
 
 
 @cleanHistory.handle()
@@ -122,7 +122,7 @@ async def _(
 
 
 # 获取完整历史记录
-getHistory = on_command("历史记录", priority=1, block=True)
+getHistory = on_command("历史记录")
 
 
 @getHistory.handle()
