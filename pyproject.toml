@@ -4,9 +4,7 @@ version = "0.1.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.9"
-authors = [
-    {name = "XiYang6666", email = "1782356858@qq.com"},
-]
+authors = [{ name = "XiYang6666", email = "1782356858@qq.com" }]
 dependencies = [
     "openai>=0.28.1",
     "httpx>=0.25.0",
@@ -16,12 +14,13 @@ dependencies = [
     "mcstatus>=11.0.1",
     "filetype>=1.2.0",
 ]
-license = {text = "MIT"}
+license = { text = "MIT" }
+
+[tool.pdm.scripts]
+build_docker = { shell = "docker build -t xiyang6666/xas_qqbot:0.1.0 ." }
 
 [tool.nonebot]
-adapters = [
-    {name = "RedProtocol", module_name = "nonebot.adapters.red"},
-]
+adapters = [{ name = "RedProtocol", module_name = "nonebot.adapters.red" }]
 plugins = []
 plugin_dirs = ["src/plugins"]
 builtin_plugins = []
