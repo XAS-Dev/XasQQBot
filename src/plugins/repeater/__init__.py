@@ -23,15 +23,9 @@ def getMessageHash(message: Message):
     for i in message:
         match i.type:
             case "text":
-                resultList.append(
-                    hashlib.sha256(("TEXT:" + str(i)).encode()).hexdigest()
-                )
+                resultList.append(hashlib.sha256(("TEXT:" + str(i)).encode()).hexdigest())
             case "image":
-                resultList.append(
-                    hashlib.sha256(
-                        ("IMAGE:" + i.data.get("md5", "")).encode()
-                    ).hexdigest()
-                )
+                resultList.append(hashlib.sha256(("IMAGE:" + i.data.get("md5", "")).encode()).hexdigest())
             case _:
                 raise FinishedException
     return hashlib.sha256(" ".join(resultList).encode()).hexdigest()
@@ -40,10 +34,7 @@ def getMessageHash(message: Message):
 @message.handle()
 async def _(event: GroupMessageEvent):
     # 忽略指令
-    if (
-        len(event.get_plaintext()) >= 1
-        and event.get_plaintext() in global_config.command_start
-    ):
+    if len(event.get_plaintext()) >= 1 and event.get_plaintext() in global_config.command_start:
         return
     # 忽略@
     if event.to_me:
@@ -55,9 +46,7 @@ async def _(event: GroupMessageEvent):
             "count": 1,
             "is_repeated": False,
         }
-    elif repeaterDict[event.peerUid]["message_hash"] == getMessageHash(
-        event.get_message()
-    ):  # noqa: E501
+    elif repeaterDict[event.peerUid]["message_hash"] == getMessageHash(event.get_message()):  # noqa: E501
         repeaterDict[event.peerUin]["count"] += 1
     else:
         repeaterDict[event.peerUin] = {
@@ -87,14 +76,9 @@ async def _(event: GroupMessageEvent):
             await message.send(event.get_message())
 
 
-async def onCalledApi(
-    bot: Bot, exception: Exception | None, api: str, data: dict[str, Any], result: Any
-):
+async def onCalledApi(bot: Bot, exception: Exception | None, api: str, data: dict[str, Any], result: Any):
     if api == "send_message" and exception is None:
-        if (
-            data["target"] in repeaterDict
-            and not repeaterDict[data["target"]]["is_repeated"]
-        ):
+        if data["target"] in repeaterDict and not repeaterDict[data["target"]]["is_repeated"]:
             repeaterDict[data["target"]] = {
                 "message_hash": "",
                 "count": 1,

@@ -27,22 +27,14 @@ async def _(event: GroupMessageEvent):
     if not result:
         return
 
-    async with httpx.AsyncClient(
-        timeout=60, verify=not config.github_card_host_mode  # type: ignore
-    ) as client:
+    async with httpx.AsyncClient(timeout=60, verify=not config.github_card_host_mode) as client:  # type: ignore
         if config.github_card_host_mode:  # type: ignore
             response = await client.get(
                 f"https://{config.github_card_githubassets_host}/{hashlib.sha256(str(time.time()).encode())}/{result[0]}",  # type: ignore  # noqa: E501
                 headers={"Host": "opengraph.githubassets.com"},
             )
         else:
-            response = await client.get(
-                f"https://opengraph.githubassets.com/{hashlib.sha256(str(time.time()).encode())}/{result[0]}"
-            )
-        sendResult = await message.send(
-            MessageSegment.image(response.content)
-        )  # type: MessageModel
-        githubOpenGraphMessages.data.append(  # type: ignore
-            {"peerUin": sendResult.peerUin, "msgSeq": sendResult.msgSeq}
-        )
+            response = await client.get(f"https://opengraph.githubassets.com/{hashlib.sha256(str(time.time()).encode())}/{result[0]}")
+        sendResult = await message.send(MessageSegment.image(response.content))  # type: MessageModel
+        githubOpenGraphMessages.data.append({"peerUin": sendResult.peerUin, "msgSeq": sendResult.msgSeq})  # type: ignore
         githubOpenGraphMessages.save()

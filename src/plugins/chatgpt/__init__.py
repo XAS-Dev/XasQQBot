@@ -59,8 +59,7 @@ checkBalance = on_command("余额")
 
 @checkBalance.handle()
 async def _(
-    event: PrivateMessageEvent
-    | GroupMessageEvent = Depends(getChecker(checkBalance)),  # type: ignore
+    event: PrivateMessageEvent | GroupMessageEvent = Depends(getChecker(checkBalance)),  # type: ignore
 ):
     async with httpx.AsyncClient() as client:
         response = await client.get(
@@ -81,9 +80,7 @@ async def _(
                 if event.get_event_name() == "message.group"
                 else ()
             ),
-            MessageSegment.text(
-                f"ChatGPT剩余余额: {response.json()['total_available']} CNY"
-            ),
+            MessageSegment.text(f"ChatGPT剩余余额: {response.json()['total_available']} CNY"),
         ]
     )
     await checkBalance.finish(message)
@@ -95,8 +92,7 @@ cleanHistory = on_command("清除历史", aliases={"失忆"})
 
 @cleanHistory.handle()
 async def _(
-    event: PrivateMessageEvent
-    | GroupMessageEvent = Depends(getChecker(checkBalance)),  # type: ignore
+    event: PrivateMessageEvent | GroupMessageEvent = Depends(getChecker(checkBalance)),  # type: ignore
 ):
     record = chatGpt.conversationRecordList.get(getIdentifying(event))  # type: ignore
     length = len(record["conversation"] or [])  # type: ignore
@@ -127,8 +123,7 @@ getHistory = on_command("历史记录")
 
 @getHistory.handle()
 async def _(
-    event: PrivateMessageEvent
-    | GroupMessageEvent = Depends(getChecker(getHistory)),  # type: ignore
+    event: PrivateMessageEvent | GroupMessageEvent = Depends(getChecker(getHistory)),  # type: ignore
 ):
     translateDict = {"user": "用户", "assistant": "XAS bot"}
     count = 0  # 总长
@@ -136,9 +131,7 @@ async def _(
     result.append("历史记录:\n")
     for i in chatGpt.conversationRecordList[getIdentifying(event)]["conversation"]:  # type: ignore  # noqa: E501
         result.append("- ")
-        result.append(
-            MessageSegment.text(f"{translateDict[i['role']]}: {i['content']}")
-        ).append("\n\n")
+        result.append(MessageSegment.text(f"{translateDict[i['role']]}: {i['content']}")).append("\n\n")
         count += len(i["content"])  # 统计字数
     result.append(f"**共 {count} 字**")
     await getHistory.finish(result)
@@ -151,8 +144,7 @@ useGPT3 = on_command("变baka")
 
 @useGPT3.handle()
 async def _(
-    event: PrivateMessageEvent
-    | GroupMessageEvent = Depends(getChecker(getHistory)),  # type: ignore
+    event: PrivateMessageEvent | GroupMessageEvent = Depends(getChecker(getHistory)),  # type: ignore
 ):
     chatGpt.getRecord(getIdentifying(event))["model"] = "gpt-3.5-turbo"  # type: ignore
     await useGPT3.finish("已切换到GPT3.5")
@@ -165,8 +157,7 @@ useGPT4 = on_command("变聪明", aliases={"IQBoost"})
 
 @useGPT4.handle()
 async def _(
-    event: PrivateMessageEvent
-    | GroupMessageEvent = Depends(getChecker(getHistory)),  # type: ignore
+    event: PrivateMessageEvent | GroupMessageEvent = Depends(getChecker(getHistory)),  # type: ignore
 ):
     chatGpt.getRecord(getIdentifying(event))["model"] = "gpt-4"  # type: ignore
     await useGPT4.finish("已切换到GPT4")
@@ -179,8 +170,7 @@ viewModel = on_command("智商")
 
 @viewModel.handle()
 async def _(
-    event: PrivateMessageEvent
-    | GroupMessageEvent = Depends(getChecker(getHistory)),  # type: ignore
+    event: PrivateMessageEvent | GroupMessageEvent = Depends(getChecker(getHistory)),  # type: ignore
 ):
     model = chatGpt.getRecord(getIdentifying(event))["model"]  # type: ignore
     result = Message()
@@ -208,8 +198,7 @@ chat = on_message(rule=to_me(), priority=2)
 
 @chat.handle()
 async def _(
-    event: PrivateMessageEvent
-    | GroupMessageEvent = Depends(getChecker(chat)),  # type: ignore
+    event: PrivateMessageEvent | GroupMessageEvent = Depends(getChecker(chat)),  # type: ignore
     message: str = EventPlainText(),
 ):
     # 判断不为指令
@@ -223,10 +212,7 @@ async def _(
 
     # 开始提问
     logger.info("开始向ChatGPT提问")
-    question = (
-        f"{event.sendNickName or event.sendMemberName}({event.get_user_id()}):"
-        + message
-    )
+    question = f"{event.sendNickName or event.sendMemberName}({event.get_user_id()}):" + message
     answer, error = await chatGpt.chat(identifying, question)  # type: ignore
     if not answer:
         resultMessage = f"错误：{error.__class__.__name__}: {str(error)}"

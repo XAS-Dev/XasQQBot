@@ -26,9 +26,7 @@ def verify_signature(payload_body, secret_token: str, signature_header: str):
     if signature_header is None:
         return False
 
-    hash_object = hmac.new(
-        secret_token.encode("utf-8"), msg=payload_body, digestmod=hashlib.sha256
-    )
+    hash_object = hmac.new(secret_token.encode("utf-8"), msg=payload_body, digestmod=hashlib.sha256)
     expected_signature = "sha256=" + hash_object.hexdigest()
     return hmac.compare_digest(expected_signature, signature_header)
 
@@ -49,16 +47,9 @@ async def githubWebhook(request: Request):
         )
         bot: Bot = get_bot()  # type: ignore
 
-        await bot.call_api(
-            "send_msg", message=message, group_id=request.url.query.get("group")
-        )
+        await bot.call_api("send_msg", message=message, group_id=request.url.query.get("group"))
 
-        asyncio.gather(
-            *[
-                bot.send_group_message(groupId, message)
-                for groupId in request.url.query.get("groups", "").split(",")
-            ]
-        )
+        asyncio.gather(*[bot.send_group_message(groupId, message) for groupId in request.url.query.get("groups", "").split(",")])
 
         return Response(200, content="OK")
     else:
