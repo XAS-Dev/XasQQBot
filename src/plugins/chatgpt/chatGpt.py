@@ -48,12 +48,9 @@ class ChatGPT:
         self.load()
 
     def checkConversationTimeout(self, userId):
-        if not (
-            datetime.now() - timedelta(seconds=config.chatgpt_chat_time_limit)
-            < self.getRecord(userId)["last_time"]
-            < datetime.now()
-        ):
+        if not (datetime.now() - timedelta(seconds=config.chatgpt_chat_time_limit) < self.getRecord(userId)["last_time"] < datetime.now()):
             self.getRecord(userId)["conversation"] = []
+            self.getRecord(userId)["model"] = config.chatgpt_default_model
             self.save()
             return True
         return False
@@ -70,9 +67,7 @@ class ChatGPT:
             }
         return self.conversationRecordList[userId]
 
-    async def chat(
-        self, userId: str, msg: str
-    ) -> tuple[Optional[str], Optional[Exception]]:
+    async def chat(self, userId: str, msg: str) -> tuple[Optional[str], Optional[Exception]]:
         # 加锁等待上一个完成
         if userId not in self.chatLocks:
             # 没锁，新建一个
@@ -87,19 +82,13 @@ class ChatGPT:
             mcStatus = await getStatus()
         except Exception as e:
             logger.error(e)
-            statusPrompt = (
-                f"状态改变了,目前暂时无法获取你的状态。错误原因是:{e}。如果有人询问你的状态请回答暂时发生了错误。\n"  # noqa: E501
-            )
+            statusPrompt = f"状态改变了,目前暂时无法获取你的状态。错误原因是:{e}。如果有人询问你的状态请回答暂时发生了错误。\n"  # noqa: E501
         else:
             if (mcStatus != self.getRecord(userId)["mcstatus"]) or isTimeOut:
                 self.getRecord(userId)["mcstatus"] = mcStatus
                 statusPrompt = (
                     f"状态改变了,根据最新状态你目前有{mcStatus['player']['online']}/{mcStatus['player']['max']}人在线"
-                    + (
-                        f",他们分别为:{','.join(mcStatus['player']['sample'])}"  # type: ignore
-                        if mcStatus["player"].get("sample")
-                        else ""
-                    )
+                    + (f",他们分别为:{','.join(mcStatus['player']['sample'])}" if mcStatus["player"].get("sample") else "")  # type: ignore
                     + "。\n"  # type: ignore
                 )
         msg = (statusPrompt or "") + msg
@@ -112,9 +101,7 @@ class ChatGPT:
         logger.debug(f"\nasked ChatGPT:\n{msg}")
         startTime = time.time()
         try:
-            client = AsyncOpenAI(
-                api_key=config.chatgpt_key, base_url=config.chatgpt_api
-            )
+            client = AsyncOpenAI(api_key=config.chatgpt_key, base_url=config.chatgpt_api)
             response = await client.chat.completions.create(
                 model=self.getRecord(userId)["model"],
                 messages=[
@@ -158,11 +145,7 @@ class ChatGPT:
         for file in self.dataPath.iterdir():
             with open(file, "r", encoding="utf-8") as f:
                 self.conversationRecordList[file.stem] = json.load(f)
-                self.conversationRecordList[file.stem][
-                    "last_time"
-                ] = datetime.fromisoformat(
-                    self.conversationRecordList[file.stem]["last_time"]  # type: ignore
-                )
+                self.conversationRecordList[file.stem]["last_time"] = datetime.fromisoformat(self.conversationRecordList[file.stem]["last_time"])  # type: ignore
 
 
 chatGpt = ChatGPT()
