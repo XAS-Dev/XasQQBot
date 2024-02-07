@@ -145,7 +145,6 @@ async def post_api(image_data: bytes, model: str) -> ApiResult:
         await Trace.finish("错误: 无法识别图片类型")
 
     async with httpx.AsyncClient() as client:
-        # try:
         response = await client.post(
             f"https://aiapiv2.animedb.cn/ai/api/detect?force_one=1&model={model}&ai_detect=0",
             files={
@@ -182,8 +181,6 @@ async def _(
         result_message.append("请发送图片.")
         await matcher.send(result_message)
         return
-    # 请求模型
-    # await matcher.send(Message(create_quote_or_at_message(event)) + got_model_message)
 
 
 @Trace.got("image")
@@ -220,7 +217,13 @@ async def got_model(
     image_message = matcher.get_arg("image")
     image_segment: ImageMessage = image_message and image_message[0]  # type: ignore
     image_data = await get_image(image_segment, bot)
-    trace_result = await post_api(image_data, model)
+    try:
+        trace_result = await post_api(image_data, model)
+    except httpx.ReadTimeout:
+        await matcher.finish("错误: http超时")
+    except httpx.HTTPStatusError as e:
+        await matcher.finish(f"http错误: {e.response.status_code}")
+
     await matcher.finish(
         create_quote_or_at_message(event)
         + create_trace_result_message(trace_result, image_data)
