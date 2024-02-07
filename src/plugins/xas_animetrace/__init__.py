@@ -4,7 +4,7 @@ from io import BytesIO
 import re
 
 from nonebot import get_driver
-from nonebot.plugin import on_command
+from nonebot.plugin import on_command, require
 from nonebot.params import EventMessage, CommandArg, EventPlainText
 from nonebot.plugin import PluginMetadata
 from nonebot.matcher import Matcher
@@ -18,6 +18,13 @@ import filetype
 import httpx
 
 from .config import Config, AnimetraceModelConfig
+
+xas_util = require("xas_util")
+
+from ..xas_util import (  # pylint: disable=E0402,C0413  # noqa: E402
+    create_quote_or_at_message,
+    rule_check_trust,
+)
 
 __plugin_meta__ = PluginMetadata(
     name="xas_animetrace",
@@ -82,14 +89,6 @@ def create_got_model_message(model_config: AnimetraceModelConfig):
 
 
 got_model_message, model_dict = create_got_model_message(config.xas_animetrace_model)
-
-
-def create_quote_or_at_message(event: Event):
-    return (
-        MessageSegment.quote(event.message.id)
-        if event.message
-        else MessageSegment.at(event.get_user_id(), event.member and event.member.nick)
-    )
 
 
 def create_trace_result_message(trace_result: ApiResult, original_image: bytes):
@@ -160,7 +159,7 @@ async def post_api(image_data: bytes, model: str) -> ApiResult:
     return response.json()
 
 
-Trace = on_command("animetrace", aliases={"人物识别", "识别人物", "这谁", "这人谁"})
+Trace = on_command("animetrace", aliases={"人物识别", "识别人物", "这谁", "这人谁"},rule=rule_check_trust)
 
 
 @Trace.handle()

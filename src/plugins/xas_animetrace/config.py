@@ -24,6 +24,6 @@ class Config(BaseModel, extra=Extra.ignore):
         },
         "game": {
             "game": "低准确率GalGame模型",
-            "game_model_kirakira": "高准确率galGame模型",
+            "game_model_kirakira": "高准确率GalGame模型",
         },
     }

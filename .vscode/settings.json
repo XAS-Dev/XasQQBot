@@ -1,7 +1,9 @@
 {
     "cSpell.words": [
         "animetrace",
-        "cartoonname"
+        "cartoonname",
+        "githubassets",
+        "opengraph"
     ],
     "python.analysis.typeCheckingMode": "basic"
 }
