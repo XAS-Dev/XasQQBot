@@ -1,5 +1,8 @@
 # XasQQBot
 
+> [!TIP]
+> 此项目已迁移至[XAS-QQBot-v2](https://github.com/XAS-Dev/XAS-QQBot-v2)
+
 XAS Minecraft 服务器 QQ 群机器人
 
 ## 功能
