@@ -5,8 +5,9 @@ from pydantic import BaseModel, Extra
 
 
 class AnimetraceModel(TypedDict):
-    index:int
-    name:str
+    index: int
+    name: str
+
 
 class AnimetraceModelConfig(TypedDict):
     anime: Dict[str, str]

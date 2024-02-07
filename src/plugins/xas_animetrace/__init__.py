@@ -8,7 +8,7 @@ from nonebot.plugin import on_command, require
 from nonebot.params import EventMessage, CommandArg, EventPlainText
 from nonebot.plugin import PluginMetadata
 from nonebot.matcher import Matcher
-from nonebot.adapters.satori.message import Message, MessageSegment, RawData
+from nonebot.adapters.satori.message import Message, MessageSegment
 from nonebot.adapters.satori.message import Image as ImageMessage
 from nonebot.adapters.satori.event import Event
 from nonebot.adapters.satori.bot import Bot
@@ -159,7 +159,11 @@ async def post_api(image_data: bytes, model: str) -> ApiResult:
     return response.json()
 
 
-Trace = on_command("animetrace", aliases={"人物识别", "识别人物", "这谁", "这人谁"},rule=rule_check_trust)
+Trace = on_command(
+    "animetrace",
+    aliases={"人物识别", "识别人物", "这谁", "这人谁"},
+    rule=rule_check_trust,
+)
 
 
 @Trace.handle()

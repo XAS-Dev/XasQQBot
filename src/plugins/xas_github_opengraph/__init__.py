@@ -9,7 +9,6 @@ from nonebot.params import EventPlainText
 from nonebot.matcher import Matcher
 from nonebot.adapters.satori.event import Event
 from nonebot.adapters.satori.message import MessageSegment, Message
-from nonebot.rule import Rule
 import httpx
 
 from .config import Config

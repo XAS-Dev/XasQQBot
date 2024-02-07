@@ -1,5 +1,3 @@
-import re
-
 from nonebot import get_driver
 from nonebot.plugin import PluginMetadata
 from nonebot.adapters.satori.event import Event
@@ -27,4 +25,8 @@ def create_quote_or_at_message(event: Event):
 
 
 async def rule_check_trust(event: Event):
-    return event.channel and event.channel.id in config.xas_trusted_channel or event.is_tome()
+    return (
+        event.channel
+        and event.channel.id in config.xas_trusted_channel
+        or event.is_tome()
+    )
