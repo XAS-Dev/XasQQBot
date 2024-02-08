@@ -93,7 +93,7 @@ got_model_message, model_dict = create_got_model_message(config.xas_animetrace_m
 
 def create_trace_result_message(trace_result: ApiResult, original_image: bytes):
     if trace_result["code"] != 0:
-        return Message(f"api结果错误, 错误代码: {trace_result['code']}")
+        return Message(f"api结果错误, 错误代码: {trace_result['code']}.")
 
     if len(trace_result["data"]) == 0:
         return Message("未识别到角色.")
@@ -142,7 +142,7 @@ async def post_api(image_data: bytes, model: str) -> ApiResult:
     image_type = filetype.guess(image_data)
 
     if image_type is None:
-        await Trace.finish("错误: 无法识别图片类型")
+        await Trace.finish("错误: 无法识别图片类型.")
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
@@ -220,11 +220,11 @@ async def got_model(
     try:
         trace_result = await post_api(image_data, model)
     except httpx.ReadTimeout:
-        await matcher.finish("错误: HTTP超时")
+        await matcher.finish("错误: HTTP超时.")
     except httpx.ConnectError:
-        await matcher.finish("错误: HTTP连接错误")
+        await matcher.finish("错误: HTTP连接错误.")
     except httpx.HTTPStatusError as e:
-        await matcher.finish(f"错误: HTTP状态错误: {e.response.status_code}")
+        await matcher.finish(f"错误: HTTP状态错误: {e.response.status_code}.")
 
     await matcher.finish(
         create_quote_or_at_message(event)
