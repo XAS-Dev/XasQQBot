@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:f606da1ccfc10d4886023811e32f395c742113c4846d9fc32570b1683170aa79"
+content_hash = "sha256:bab099c3011441c4d756347e956b4ad1dc799648593d158ba0a62b677624d5b4"
 
 [[package]]
 name = "anyio"
@@ -366,7 +366,7 @@ files = [
 
 [[package]]
 name = "nonebot-adapter-satori"
-version = "0.8.2"
+version = "0.8.3"
 requires_python = ">=3.8"
 summary = "Satori Protocol Adapter for Nonebot2"
 groups = ["default"]
@@ -374,8 +374,8 @@ dependencies = [
     "nonebot2>=2.1.0",
 ]
 files = [
-    {file = "nonebot_adapter_satori-0.8.2-py3-none-any.whl", hash = "sha256:1e93c7fd66d70ed4c3921c648283f086367b5fc61a899dc253bf59b4331db32a"},
-    {file = "nonebot_adapter_satori-0.8.2.tar.gz", hash = "sha256:804a53978eb7c1c4e8b444769d4312ef5172d0e14eadd5c8649cf1b8dfecc7f9"},
+    {file = "nonebot_adapter_satori-0.8.3-py3-none-any.whl", hash = "sha256:890ece3518f75465b5d2bbbc55acf93c5fe9234a9f81748779cd4587862563b8"},
+    {file = "nonebot_adapter_satori-0.8.3.tar.gz", hash = "sha256:150f7b4780235699dd5abb3f773a6b2b388c7d0e824f99686e24a96bcf41c295"},
 ]
 
 [[package]]
