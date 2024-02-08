@@ -7,7 +7,7 @@ XAS Minecraft 服务器 QQ 群机器人
 - [x] AnimeTrace 动漫人物识别
 - [x] Github 项目卡片
 - [ ] Github commits 消息推送
-- [ ] ChatGPT 聊天
+- [x] ChatGPT 聊天
 - [ ] 获取 MC 服务器状态
 
 ## 如何使用
