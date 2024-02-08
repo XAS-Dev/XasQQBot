@@ -7,7 +7,7 @@ from nonebot.plugin import PluginMetadata, require
 from nonebot.plugin import on_message
 from nonebot.params import EventPlainText
 from nonebot.matcher import Matcher
-from nonebot.adapters.satori.event import Event
+from nonebot.adapters.satori.event import MessageCreatedEvent
 from nonebot.adapters.satori.message import MessageSegment, Message
 import httpx
 
@@ -37,7 +37,7 @@ GithubMessage = on_message()
 @GithubMessage.handle()
 async def _(
     matcher: Matcher,
-    event: Event,
+    event: MessageCreatedEvent,
     message_text=EventPlainText(),
 ):
     result = re.findall(

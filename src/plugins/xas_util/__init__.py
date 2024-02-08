@@ -1,6 +1,6 @@
 from nonebot import get_driver
 from nonebot.plugin import PluginMetadata
-from nonebot.adapters.satori.event import Event
+from nonebot.adapters.satori.event import MessageCreatedEvent
 from nonebot.adapters.satori.message import MessageSegment
 
 from .config import Config
@@ -16,7 +16,7 @@ global_config = get_driver().config
 config = Config.parse_obj(global_config)
 
 
-def create_quote_or_at_message(event: Event):
+def create_quote_or_at_message(event: MessageCreatedEvent):
     return (
         MessageSegment.quote(event.message.id)
         if event.message
@@ -24,7 +24,7 @@ def create_quote_or_at_message(event: Event):
     )
 
 
-async def rule_check_trust(event: Event):
+async def rule_check_trust(event: MessageCreatedEvent):
     return (
         event.channel
         and event.channel.id in config.xas_trusted_channel

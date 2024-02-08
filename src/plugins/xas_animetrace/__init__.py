@@ -10,7 +10,7 @@ from nonebot.plugin import PluginMetadata
 from nonebot.matcher import Matcher
 from nonebot.adapters.satori.message import Message, MessageSegment
 from nonebot.adapters.satori.message import Image as ImageMessage
-from nonebot.adapters.satori.event import Event
+from nonebot.adapters.satori.event import MessageCreatedEvent
 from nonebot.adapters.satori.bot import Bot
 from typing_extensions import TypedDict
 from PIL import Image
@@ -168,7 +168,7 @@ Trace = on_command(
 @Trace.handle()
 async def _(
     matcher: Matcher,
-    event: Event,
+    event: MessageCreatedEvent,
     args: Message = CommandArg(),
 ):
     print()
@@ -186,7 +186,7 @@ async def _(
 @Trace.got("image")
 async def got_image(
     matcher: Matcher,
-    event: Event,
+    event: MessageCreatedEvent,
     message=EventMessage(),
     message_text=EventPlainText(),
 ):
@@ -203,7 +203,7 @@ async def got_image(
 @Trace.got("model")
 async def got_model(
     matcher: Matcher,
-    event: Event,
+    event: MessageCreatedEvent,
     bot: Bot,
     message_text=EventPlainText(),
 ):
