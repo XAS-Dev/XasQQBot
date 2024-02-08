@@ -1,0 +1,6 @@
+__pycache__/
+/.venv/
+/.vscode/
+/.pdm-python
+/.env.dev
+/.env.prod
