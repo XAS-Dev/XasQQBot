@@ -18,7 +18,6 @@ class ChatGPT:
         message: str,
         context: List[ChatCompletionMessageParam],
         system_prompt: str,
-        format_map: dict,
     ) -> Tuple[str, List[ChatCompletionMessageParam]]:
 
         client = AsyncOpenAI(
@@ -34,5 +33,4 @@ class ChatGPT:
             messages=[{"role": "system", "content": system_prompt}, *messages],
         )
         answer = response.choices[0].message.content
-        answer = answer and answer.format_map(format_map)
         return answer, [*messages, {"role": "assistant", "content": answer}]  # type: ignore

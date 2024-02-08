@@ -159,7 +159,6 @@ async def chat(
             f"({event.get_user_id()}): {message_text}",
             messages,
             system_prompt,
-            format_map=extend_data,
         )
     except APIConnectionError:
         logger.error(create_quote_or_at_message(event) + "错误: API连接错误.")
