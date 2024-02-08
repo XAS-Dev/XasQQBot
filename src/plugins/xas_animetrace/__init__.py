@@ -220,9 +220,11 @@ async def got_model(
     try:
         trace_result = await post_api(image_data, model)
     except httpx.ReadTimeout:
-        await matcher.finish("错误: http超时")
+        await matcher.finish("错误: HTTP超时")
+    except httpx.ConnectError:
+        await matcher.finish("错误: HTTP连接错误")
     except httpx.HTTPStatusError as e:
-        await matcher.finish(f"http错误: {e.response.status_code}")
+        await matcher.finish(f"错误: HTTP状态错误: {e.response.status_code}")
 
     await matcher.finish(
         create_quote_or_at_message(event)
