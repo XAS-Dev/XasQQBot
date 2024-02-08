@@ -128,7 +128,7 @@ async def chat(
     event: MessageCreatedEvent,
     message_text=EventPlainText(),
 ):
-    print("触发ChatGPT")
+    logger.success("触发ChatGPT")
     if event.get_session_id() not in lock_dict:
         lock_dict[event.get_session_id()] = Lock()
     logger.trace(f"{event.get_session_id()} 已加锁.")
