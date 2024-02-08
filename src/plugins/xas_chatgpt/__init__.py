@@ -196,8 +196,22 @@ SwitchGPT4 = on_command(
 
 @SwitchGPT4.handle()
 async def switch_gpt4(matcher: Matcher, event: MessageCreatedEvent):
-    context_dict[event.get_session_id()]["model"] = "gpt-4"
+    channel_id: str = event.channel and event.channel.id  # type: ignore
+    context_dict[channel_id]["model"] = "gpt-4"
     await matcher.finish("已切换到 GPT4.")
+
+
+ViewModel = on_command(
+    "查看模型",
+    aliases={"智商", "IQ"},
+    rule=Rule(rule_check_trust) & Rule(rule_check_enable),
+)
+
+
+@ViewModel.handle()
+async def view_model(matcher: Matcher, event: MessageCreatedEvent):
+    channel_id: str = event.channel and event.channel.id  # type: ignore
+    await matcher.finish(f"当前模型: {context_dict[channel_id]['model']}")
 
 
 SetPrompt = on_command(
