@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:7c0c9670e4ce59acb76f79e859fd0aed259b5a2d265612fe08bc9c549bd3c4cd"
+content_hash = "sha256:f606da1ccfc10d4886023811e32f395c742113c4846d9fc32570b1683170aa79"
 
 [[package]]
 name = "anyio"
@@ -59,6 +59,17 @@ marker = "sys_platform == \"win32\" or platform_system == \"Windows\""
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
+]
+
+[[package]]
+name = "distro"
+version = "1.9.0"
+requires_python = ">=3.6"
+summary = "Distro - an OS platform information API"
+groups = ["default"]
+files = [
+    {file = "distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2"},
+    {file = "distro-1.9.0.tar.gz", hash = "sha256:2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed"},
 ]
 
 [[package]]
@@ -368,6 +379,21 @@ files = [
 ]
 
 [[package]]
+name = "nonebot-plugin-localstore"
+version = "0.5.2"
+requires_python = ">=3.8,<4.0"
+summary = "Local Storage Support for NoneBot2"
+groups = ["default"]
+dependencies = [
+    "nonebot2<3.0.0,>=2.0.0",
+    "typing-extensions>=4.0.0",
+]
+files = [
+    {file = "nonebot_plugin_localstore-0.5.2-py3-none-any.whl", hash = "sha256:6cd3ee2120918e9fd2af572730aa0612f29d69da22c67bf7297bbdc86b489b57"},
+    {file = "nonebot_plugin_localstore-0.5.2.tar.gz", hash = "sha256:66ac53f954c7f9c4117c3bc472580c018bc83ec0c08bc12c4fd96ce875f8a1e3"},
+]
+
+[[package]]
 name = "nonebot2"
 version = "2.1.3"
 requires_python = ">=3.8,<4.0"
@@ -403,6 +429,26 @@ dependencies = [
 files = [
     {file = "nonebot2-2.1.3-py3-none-any.whl", hash = "sha256:c36c1a60ce4355d9777fee431c08619f22ffd60f7060993fbbbd1fe67b6368f7"},
     {file = "nonebot2-2.1.3.tar.gz", hash = "sha256:e750e615f1ad2503721ce055fbe55ec3b061277135d995be112fecd27f7232e5"},
+]
+
+[[package]]
+name = "openai"
+version = "1.11.1"
+requires_python = ">=3.7.1"
+summary = "The official Python library for the openai API"
+groups = ["default"]
+dependencies = [
+    "anyio<5,>=3.5.0",
+    "distro<2,>=1.7.0",
+    "httpx<1,>=0.23.0",
+    "pydantic<3,>=1.9.0",
+    "sniffio",
+    "tqdm>4",
+    "typing-extensions<5,>=4.7",
+]
+files = [
+    {file = "openai-1.11.1-py3-none-any.whl", hash = "sha256:e0f388ce499f53f58079d0c1f571f356f2b168b84d0d24a412506b6abc714980"},
+    {file = "openai-1.11.1.tar.gz", hash = "sha256:f66b8fe431af43e09594147ef3cdcb79758285de72ebafd52be9700a2af41e99"},
 ]
 
 [[package]]
@@ -673,6 +719,20 @@ marker = "python_version < \"3.11\""
 files = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
+]
+
+[[package]]
+name = "tqdm"
+version = "4.66.1"
+requires_python = ">=3.7"
+summary = "Fast, Extensible Progress Meter"
+groups = ["default"]
+dependencies = [
+    "colorama; platform_system == \"Windows\"",
+]
+files = [
+    {file = "tqdm-4.66.1-py3-none-any.whl", hash = "sha256:d302b3c5b53d47bce91fea46679d9c3c6508cf6332229aa1e7d8653723793386"},
+    {file = "tqdm-4.66.1.tar.gz", hash = "sha256:d88e651f9db8d8551a62556d3cff9e3034274ca5d66e93197cf2490e2dcb69c7"},
 ]
 
 [[package]]

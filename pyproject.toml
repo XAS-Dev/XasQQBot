@@ -11,12 +11,14 @@ dependencies = [
     "filetype>=1.2.0",
     "typing-extensions>=4.9.0",
     "pillow>=10.2.0",
+    "openai>=1.11.1",
+    "nonebot-plugin-localstore>=0.5.2",
 ]
 license = { text = "MIT" }
 
 [tool.nonebot]
 adapters = [{ name = "Satori", module_name = "nonebot.adapters.satori" }]
-plugins = []
+plugins = ["nonebot_plugin_localstore"]
 plugin_dirs = ["src/plugins"]
 builtin_plugins = []
 
