@@ -5,7 +5,7 @@ import re
 
 from nonebot import get_driver
 from nonebot.plugin import on_command, require
-from nonebot.params import EventMessage, CommandArg, EventPlainText, Depends
+from nonebot.params import EventMessage, EventPlainText, Depends
 from nonebot.plugin import PluginMetadata
 from nonebot.typing import T_State
 from nonebot.matcher import Matcher
