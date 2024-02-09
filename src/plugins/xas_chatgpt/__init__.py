@@ -183,7 +183,7 @@ SwitchGPT3 = on_command(
 async def switch_gpt3(matcher: Matcher, event: MessageCreatedEvent):
     channel_id: str = event.channel and event.channel.id  # type: ignore
     context_dict[channel_id]["model"] = "gpt-3.5-turbo"
-    await matcher.finish("已切换到 ChatGPT3.5.")
+    await matcher.finish(create_quote_or_at_message(event) + "已切换到 ChatGPT3.5.")
 
 
 SwitchGPT4 = on_command(
@@ -197,7 +197,7 @@ SwitchGPT4 = on_command(
 async def switch_gpt4(matcher: Matcher, event: MessageCreatedEvent):
     channel_id: str = event.channel and event.channel.id  # type: ignore
     context_dict[channel_id]["model"] = "gpt-4"
-    await matcher.finish("已切换到 GPT4.")
+    await matcher.finish(create_quote_or_at_message(event) + "已切换到 GPT4.")
 
 
 ViewModel = on_command(
