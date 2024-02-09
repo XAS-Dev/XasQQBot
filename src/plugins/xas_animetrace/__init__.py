@@ -1,12 +1,13 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 from urllib.parse import urlparse
 from io import BytesIO
 import re
 
 from nonebot import get_driver
 from nonebot.plugin import on_command, require
-from nonebot.params import EventMessage, CommandArg, EventPlainText
+from nonebot.params import EventMessage, CommandArg, EventPlainText, Depends
 from nonebot.plugin import PluginMetadata
+from nonebot.typing import T_State
 from nonebot.matcher import Matcher
 from nonebot.adapters.satori.message import Message, MessageSegment
 from nonebot.adapters.satori.message import Image as ImageMessage
@@ -54,6 +55,12 @@ class ApiResult(TypedDict):
     ai: bool
     code: int
     data: List[ApiResultItem]
+
+
+class FileTypeException(Exception):
+    def __init__(self, message, *, file_data: Optional[bytes]) -> None:
+        super().__init__(message)
+        self.file_data = file_data
 
 
 def clip_image(original_image: bytes, relative_box: Tuple[float, ...]):
@@ -129,20 +136,18 @@ def create_trace_result_message(trace_result: ApiResult, original_image: bytes):
 async def get_image(image_segment: ImageMessage, bot: Bot):
     parse_result = urlparse(image_segment.data["src"])
     async with httpx.AsyncClient() as client:
-        print(
-            f"{parse_result.scheme}://{bot.info.host}:{bot.info.port}{parse_result.path}"
-        )
         response = await client.get(
             f"{parse_result.scheme}://{bot.info.host}:{bot.info.port}{parse_result.path}"
         )
+        response.raise_for_status()
     return response.read()
 
 
-async def post_api(image_data: bytes, model: str) -> ApiResult:
-    image_type = filetype.guess(image_data)
-
-    if image_type is None:
-        await Trace.finish("错误: 无法识别图片类型.")
+async def post_api(
+    image_data: bytes,
+    image_type,
+    model: str,
+) -> ApiResult:
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
@@ -155,6 +160,7 @@ async def post_api(image_data: bytes, model: str) -> ApiResult:
                 )
             },
         )
+        response.raise_for_status()
     return response.json()
 
 
@@ -165,46 +171,76 @@ Trace = on_command(
 )
 
 
+async def depends_image_message(
+    event: MessageCreatedEvent,
+    message: Message = EventMessage(),
+) -> Optional[Message]:
+    return message.get("img") or (
+        event.reply
+        and (reply_content := event.reply.data.get("content"))
+        and reply_content.get("img")
+    )  # type: ignore
+
+
 @Trace.handle()
-async def _(
+async def trace(
     matcher: Matcher,
     event: MessageCreatedEvent,
-    args: Message = CommandArg(),
+    image_message: Optional[Message] = Depends(depends_image_message),
 ):
-    print()
-    if image_message := args.get("img"):
+    if image_message:
         matcher.set_arg("image", image_message)
-    else:
-        # 请求图片
-        result_message = Message()
-        result_message.append(create_quote_or_at_message(event))
-        result_message.append("请发送图片.")
-        await matcher.send(result_message)
         return
+
+    # 请求图片
+    await matcher.send(create_quote_or_at_message(event) + "请发送图片.")
 
 
 @Trace.got("image")
 async def got_image(
     matcher: Matcher,
     event: MessageCreatedEvent,
-    message=EventMessage(),
+    bot: Bot,
+    state: T_State,
     message_text=EventPlainText(),
+    image_message: Optional[Message] = Depends(depends_image_message),
 ):
     if message_text == "退出":
         await matcher.finish(create_quote_or_at_message(event) + "已结束会话")
-    image_message = message.get("img")
+
     if not image_message:
-        await matcher.reject("无法获取图片, 请重新发送. 输入“退出”结束会话.")
+        await matcher.reject(
+            create_quote_or_at_message(event)
+            + "无法获取图片, 请重新发送. 输入“退出”结束会话."
+        )
+
+    image_segment: ImageMessage = image_message[0]  # type: ignore
+    try:
+        image_data = await get_image(image_segment, bot)
+    except httpx.HTTPStatusError as e:
+        await matcher.finish(
+            create_quote_or_at_message(event)
+            + f"错误: 无法从QQNT获取资源: {e.response.status_code}"
+        )
+
+    image_type = filetype.guess(image_data)
+    if image_type is None:
+        await matcher.finish(
+            create_quote_or_at_message(event) + "错误: 无法识别图片类型."
+        )
+
+    state["image_data"] = image_data
+    state["image_type"] = image_type
+
     matcher.set_arg("image", image_message)
-    # 请求模型
-    await matcher.send(Message(create_quote_or_at_message(event)) + got_model_message)
+    await matcher.send(create_quote_or_at_message(event) + got_model_message)
 
 
 @Trace.got("model")
 async def got_model(
     matcher: Matcher,
     event: MessageCreatedEvent,
-    bot: Bot,
+    state: T_State,
     message_text=EventPlainText(),
 ):
     if (
@@ -214,11 +250,11 @@ async def got_model(
         await matcher.reject("请输入正确的序号. 输入“退出”结束会话. ")
 
     model = model_dict[model_index]
-    image_message = matcher.get_arg("image")
-    image_segment: ImageMessage = image_message and image_message[0]  # type: ignore
-    image_data = await get_image(image_segment, bot)
+    image_data = state["image_data"]
+    image_type = state["image_type"]
+
     try:
-        trace_result = await post_api(image_data, model)
+        trace_result = await post_api(image_data, image_type, model)
     except httpx.ReadTimeout:
         await matcher.finish("错误: HTTP超时.")
     except httpx.ConnectError:
