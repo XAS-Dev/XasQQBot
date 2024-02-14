@@ -41,7 +41,7 @@ async def _(
     message_text=EventPlainText(),
 ):
     result = re.findall(
-        r"github.com/([a-zA-Z0-9-]+/[a-zA-Z0-9-/.]+)",
+        r"github.com/([a-zA-Z0-9-_]+/[a-zA-Z0-9-_/.]+)",
         message_text,
     )
     if not result:
