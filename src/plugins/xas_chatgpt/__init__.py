@@ -5,17 +5,16 @@ from asyncio import Lock
 
 from nonebot import get_driver
 from nonebot.log import logger
-from nonebot.rule import Rule, to_me
+from nonebot.rule import Rule
 from nonebot.plugin import PluginMetadata, require
 from nonebot.plugin import on_message, on_command
 from nonebot.params import EventPlainText, CommandArg
 from nonebot.matcher import Matcher
 from nonebot.permission import SUPERUSER
-from nonebot.adapters.satori.bot import Bot
 from nonebot.adapters.satori.event import MessageCreatedEvent
 from nonebot.adapters.satori.message import Message
-from openai.types.chat import ChatCompletionMessageParam
 from openai import APIConnectionError
+from openai.types.chat import ChatCompletionMessageParam
 from typing_extensions import TypedDict
 
 

@@ -5,8 +5,8 @@ import re
 from nonebot import get_driver
 from nonebot.rule import Rule
 from nonebot.plugin import PluginMetadata, require
-from nonebot.plugin import on_message, on_command
-from nonebot.params import EventPlainText, EventMessage
+from nonebot.plugin import on_message
+from nonebot.params import EventPlainText
 from nonebot.matcher import Matcher
 from nonebot.adapters.satori.event import MessageCreatedEvent
 from nonebot.adapters.satori.message import MessageSegment, Message
