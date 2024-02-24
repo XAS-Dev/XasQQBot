@@ -35,7 +35,7 @@ GITHUB_REGEXP = r"github.com/([a-zA-Z0-9-_]+/[a-zA-Z0-9-_/.]+)"
 
 
 async def rule_check_github(message_text=EventPlainText()):
-    return bool(re.match(GITHUB_REGEXP, message_text))
+    return bool(re.findall(GITHUB_REGEXP, message_text))
 
 
 GithubMessage = on_message(rule=Rule(rule_check_github))
