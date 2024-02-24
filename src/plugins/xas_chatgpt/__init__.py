@@ -104,9 +104,18 @@ async def rule_check_not_command(message=EventPlainText()):
     return result
 
 
+async def rule_check_is_message(message=EventPlainText()):
+    result = bool(message)
+    logger.trace(f"rule is_message: {result}")
+    return result
+
+
 Chat = on_message(
     priority=10,
-    rule=Rule(rule_check_tome) & Rule(rule_check_not_command) & Rule(rule_check_enable),
+    rule=Rule(rule_check_tome)
+    & Rule(rule_check_not_command)
+    & Rule(rule_check_is_message)
+    & Rule(rule_check_enable),
 )
 
 
