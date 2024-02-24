@@ -182,6 +182,8 @@ SwitchGPT3 = on_command(
 @SwitchGPT3.handle()
 async def switch_gpt3(matcher: Matcher, event: MessageCreatedEvent):
     channel_id: str = event.channel and event.channel.id  # type: ignore
+    if channel_id not in context_dict:
+        set_default_context(channel_id)
     context_dict[channel_id]["model"] = "gpt-3.5-turbo"
     await matcher.finish(create_quote_or_at_message(event) + "已切换到 ChatGPT3.5.")
 
@@ -196,6 +198,8 @@ SwitchGPT4 = on_command(
 @SwitchGPT4.handle()
 async def switch_gpt4(matcher: Matcher, event: MessageCreatedEvent):
     channel_id: str = event.channel and event.channel.id  # type: ignore
+    if channel_id not in context_dict:
+        set_default_context(channel_id)
     context_dict[channel_id]["model"] = "gpt-4"
     await matcher.finish(create_quote_or_at_message(event) + "已切换到 GPT4.")
 
@@ -210,6 +214,8 @@ ViewModel = on_command(
 @ViewModel.handle()
 async def view_model(matcher: Matcher, event: MessageCreatedEvent):
     channel_id: str = event.channel and event.channel.id  # type: ignore
+    if channel_id not in context_dict:
+        set_default_context(channel_id)
     await matcher.finish(f"当前模型: {context_dict[channel_id]['model']}")
 
 
