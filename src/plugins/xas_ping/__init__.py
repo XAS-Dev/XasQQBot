@@ -27,4 +27,4 @@ Ping = on_command("ping", rule=Rule(rule_check_trust))
 
 @Ping.handle()
 async def pong(matcher: Matcher):
-    await matcher.send("pong")
+    await matcher.finish("pong")

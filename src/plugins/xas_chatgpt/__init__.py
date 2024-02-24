@@ -5,7 +5,7 @@ from asyncio import Lock
 
 from nonebot import get_driver
 from nonebot.log import logger
-from nonebot.rule import Rule
+from nonebot.rule import Rule, to_me
 from nonebot.plugin import PluginMetadata, require
 from nonebot.plugin import on_message, on_command
 from nonebot.params import EventPlainText, CommandArg
@@ -26,6 +26,7 @@ require("xas_util")
 from ..xas_util import (  # pylint: disable=C0411,C0413,E0402  # noqa: E402
     create_quote_or_at_message,
     rule_check_trust,
+    rule_check_tome,
 )
 
 require("nonebot_plugin_localstore")
@@ -90,18 +91,6 @@ def register_extend(extend: Callable[[dict], dict]):
     extend_list.append(extend)
 
 
-async def rule_check_tome(bot: Bot, event: MessageCreatedEvent):
-    logger.trace(f"--> {event.reply}")
-    logger.trace(f"--> {bot.self_id}")
-    logger.trace(f"--> {event.is_tome()}")
-
-    result = (
-        event.channel and event.channel.id.startswith("private:")
-    ) or event.is_tome()
-    logger.trace(f"rule tome/private: {result} ({event.channel}; {event.is_tome()})")
-    return result
-
-
 async def rule_check_enable(event: MessageCreatedEvent):
     result = bool(
         event.channel and (event.channel.id in config.xas_chatgpt_enable_channel)
@@ -117,7 +106,7 @@ async def rule_check_not_command(message=EventPlainText()):
 
 
 Chat = on_message(
-    priority=0,
+    priority=10,
     rule=Rule(rule_check_tome) & Rule(rule_check_not_command) & Rule(rule_check_enable),
 )
 

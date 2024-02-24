@@ -1,4 +1,5 @@
 from nonebot import get_driver
+from nonebot.log import logger
 from nonebot.plugin import PluginMetadata
 from nonebot.adapters.satori.event import MessageCreatedEvent
 from nonebot.adapters.satori.message import MessageSegment
@@ -22,6 +23,14 @@ def create_quote_or_at_message(event: MessageCreatedEvent):
         if event.message
         else MessageSegment.at(event.get_user_id(), event.member and event.member.nick)
     )
+
+
+async def rule_check_tome(event: MessageCreatedEvent):
+    result = (
+        event.channel and event.channel.id.startswith("private:")
+    ) or event.is_tome()
+    logger.trace(f"rule tome/private: {result} ({event.channel}; {event.is_tome()})")
+    return result
 
 
 async def rule_check_trust(event: MessageCreatedEvent):

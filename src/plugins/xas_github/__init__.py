@@ -3,9 +3,10 @@ import time
 import re
 
 from nonebot import get_driver
+from nonebot.rule import Rule
 from nonebot.plugin import PluginMetadata, require
-from nonebot.plugin import on_message
-from nonebot.params import EventPlainText
+from nonebot.plugin import on_message, on_command
+from nonebot.params import EventPlainText, EventMessage
 from nonebot.matcher import Matcher
 from nonebot.adapters.satori.event import MessageCreatedEvent
 from nonebot.adapters.satori.message import MessageSegment, Message
@@ -30,8 +31,14 @@ global_config = get_driver().config
 config = Config.parse_obj(global_config)
 host_mode = config.github_opengraph_host_mode
 
+GITHUB_REGEXP = r"github.com/([a-zA-Z0-9-_]+/[a-zA-Z0-9-_/.]+)"
 
-GithubMessage = on_message()
+
+async def rule_check_github(message_text=EventPlainText()):
+    return bool(re.match(GITHUB_REGEXP, message_text))
+
+
+GithubMessage = on_message(rule=Rule(rule_check_github))
 
 
 @GithubMessage.handle()
@@ -40,10 +47,7 @@ async def _(
     event: MessageCreatedEvent,
     message_text=EventPlainText(),
 ):
-    result = re.findall(
-        r"github.com/([a-zA-Z0-9-_]+/[a-zA-Z0-9-_/.]+)",
-        message_text,
-    )
+    result = re.findall(GITHUB_REGEXP, message_text)
     if not result:
         return
 
