@@ -5,6 +5,7 @@ XAS Minecraft 服务器 QQ 群机器人
 ## 功能
 
 - [x] AnimeTrace 动漫人物识别
+- [x] 萌娘百科搜索
 - [x] Github 项目卡片
 - [ ] Github commits 消息推送
 - [x] ChatGPT 聊天
