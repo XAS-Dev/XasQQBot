@@ -8,7 +8,7 @@ from nonebot.plugin import PluginMetadata
 from nonebot.plugin import on_command
 from nonebot.matcher import Matcher
 from nonebot.adapters.satori.event import MessageCreatedEvent
-from nonebot.adapters.satori.message import Message, MessageSegment
+from nonebot.adapters.satori.message import Message
 from typing_extensions import TypedDict
 import httpx
 
