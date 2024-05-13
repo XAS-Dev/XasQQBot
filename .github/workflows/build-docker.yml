@@ -13,10 +13,10 @@ jobs:
 
       - run: git fetch --unshallow
 
-      - name: Set up Python 3.8
+      - name: Set up Python 3.12
         uses: actions/setup-python@v3
         with:
-          python-version: "3.8"
+          python-version: "3.12"
 
       - name: Setup PDM
         uses: pdm-project/setup-pdm@v4.1
