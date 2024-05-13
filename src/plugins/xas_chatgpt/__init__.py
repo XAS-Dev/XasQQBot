@@ -263,6 +263,25 @@ async def get_prompt(
     await matcher.finish(create_quote_or_at_message(event) + "[默认]" + default_prompt)
 
 
+CleanPrompt = on_command(
+    "清除提示词",
+    rule=Rule(rule_check_trust) & Rule(rule_check_enable),
+    permission=SUPERUSER,
+)
+
+
+@CleanPrompt.handle()
+async def clean_prompt(
+    matcher: Matcher,
+    event: MessageCreatedEvent,
+):
+    channel_id: str = event.channel and event.channel.id  # type: ignore
+    if channel_id in system_prompt_config:
+        del system_prompt_config[channel_id]
+    save_system_prompt()
+    await matcher.finish(create_quote_or_at_message(event) + "清除完成")
+
+
 CleanMessages = on_command(
     "清除对话", aliases={"失忆"}, rule=Rule(rule_check_trust) & Rule(rule_check_enable)
 )
