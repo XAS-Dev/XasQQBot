@@ -142,3 +142,4 @@ dmypy.json
 
 /.env.dev
 /.env.prod
+/.pdm-python
