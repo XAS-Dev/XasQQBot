@@ -1,5 +1,4 @@
 from typing import Dict, List, Tuple, Optional
-from urllib.parse import urlparse
 from io import BytesIO
 import re
 
@@ -12,7 +11,6 @@ from nonebot.matcher import Matcher
 from nonebot.adapters.satori.message import Message, MessageSegment
 from nonebot.adapters.satori.message import Image as ImageMessage
 from nonebot.adapters.satori.event import MessageCreatedEvent
-from nonebot.adapters.satori.bot import Bot
 from typing_extensions import TypedDict
 from PIL import Image
 import filetype
