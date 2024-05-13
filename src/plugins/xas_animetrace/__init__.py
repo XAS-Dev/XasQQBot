@@ -243,6 +243,9 @@ async def got_model(
     state: T_State,
     message_text=EventPlainText(),
 ):
+    if message_text == "退出":
+        await matcher.finish(create_quote_or_at_message(event) + "已结束会话")
+
     if (
         not re.match("^[0-9]+$", message_text)
         or (model_index := int(message_text)) not in model_dict

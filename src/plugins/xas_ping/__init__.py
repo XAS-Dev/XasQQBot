@@ -1,6 +1,7 @@
 from nonebot import get_driver, require
 from nonebot.rule import Rule
 from nonebot.matcher import Matcher
+from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
 from nonebot.plugin import on_command
 
@@ -22,7 +23,7 @@ __plugin_meta__ = PluginMetadata(
 global_config = get_driver().config
 config = Config.parse_obj(global_config)
 
-Ping = on_command("ping", rule=Rule(rule_check_trust))
+Ping = on_command("ping", rule=Rule(rule_check_trust), permission=SUPERUSER)
 
 
 @Ping.handle()
