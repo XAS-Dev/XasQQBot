@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Dict, List, Callable
 from datetime import datetime, timedelta
 from asyncio import Lock
@@ -91,10 +92,14 @@ def register_extend(extend: Callable[[dict], dict]):
 
 
 async def rule_check_enable(event: MessageCreatedEvent):
-    result = bool(
+    is_correct_cannel = bool(
         event.channel and (event.channel.id in config.xas_chatgpt_enable_channel)
     )
-    logger.trace(f"rule enable: {result}")
+    match_result = re.match(r"^private:(.+)$", event.channel and event.channel.id)
+    is_private = match_result
+    is_correct_private = is_private and match_result.group(1) == event.user.id
+    result = bool(is_correct_cannel and (not is_private or is_correct_private))
+    logger.trace(f"rule check_enable: {result}")
     return result
 
 

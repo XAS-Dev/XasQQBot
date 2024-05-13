@@ -133,12 +133,9 @@ def create_trace_result_message(trace_result: ApiResult, original_image: bytes):
         return result_message
 
 
-async def get_image(image_segment: ImageMessage, bot: Bot):
-    parse_result = urlparse(image_segment.data["src"])
+async def get_image(image_segment: ImageMessage):
     async with httpx.AsyncClient() as client:
-        response = await client.get(
-            f"{parse_result.scheme}://{bot.info.host}:{bot.info.port}{parse_result.path}"
-        )
+        response = await client.get(image_segment.data["src"])
         response.raise_for_status()
     return response.read()
 
@@ -200,7 +197,6 @@ async def trace(
 async def got_image(
     matcher: Matcher,
     event: MessageCreatedEvent,
-    bot: Bot,
     state: T_State,
     message_text=EventPlainText(),
     image_message: Optional[Message] = Depends(depends_image_message),
@@ -216,7 +212,7 @@ async def got_image(
 
     image_segment: ImageMessage = image_message[0]  # type: ignore
     try:
-        image_data = await get_image(image_segment, bot)
+        image_data = await get_image(image_segment)
     except httpx.HTTPStatusError as e:
         await matcher.finish(
             create_quote_or_at_message(event)
