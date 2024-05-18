@@ -64,6 +64,6 @@ async def _(
         result_message = Message()
         result_message.append(create_quote_or_at_message(event))
         result_message.append(
-            MessageSegment.image(raw={"data": response.content, "mime": "image/png"})
+            MessageSegment.image(raw=response.content, mime="image/png")
         )
         await matcher.finish(result_message)

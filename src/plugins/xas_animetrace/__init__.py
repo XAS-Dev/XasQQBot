@@ -120,7 +120,7 @@ def create_trace_result_message(trace_result: ApiResult, original_image: bytes):
             box = tuple(char["box"][:4])
             image_data = clip_image(original_image, box)
             result_message.append(
-                MessageSegment.image(raw={"data": image_data, "mime": "image/jpeg"})
+                MessageSegment.image(raw=image_data, mime="image/jpeg")
             )
             result_message.append("可能的角色:\n")
             char_list = sorted(char["char"], key=lambda it: it["acc"], reverse=True)[:3]
