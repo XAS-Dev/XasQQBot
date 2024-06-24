@@ -43,12 +43,8 @@ async def check_server(server_name: str, add_msg: Callable[[MessageSegment], Non
         status_data[server_name] = False
     except gaierror:
         logger.warning(f"无法解析地址: {server_addr}")
-    except OSError as e:
-        if (
-            str(e) == "Socket did not respond with any information!"
-            and status_data[server_name]
-        ):
-            logger.trace("Socket did not respond with any information!")
+    except OSError:
+        if status_data[server_name]:
             add_msg(warning_message_seg)
         status_data[server_name] = False
     else:
