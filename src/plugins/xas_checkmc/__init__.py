@@ -27,7 +27,7 @@ config = Config.parse_obj(global_config)
 
 groups = config.xas_checkmc_groups
 server_data = config.xas_checkmc_servers
-status_data: dict[str, bool] = {server_name: True for server_name in server_data}
+status_data: dict[str, int] = {server_name: 0 for server_name in server_data}
 
 
 async def check_server(server_name: str, add_msg: Callable[[MessageSegment], None]):
@@ -38,20 +38,18 @@ async def check_server(server_name: str, add_msg: Callable[[MessageSegment], Non
         server = await JavaServer.async_lookup(server_addr)
         await server.async_status()
     except TimeoutError:
-        if status_data[server_name]:
-            add_msg(warning_message_seg)
-        status_data[server_name] = False
+        status_data[server_name] += 1
     except gaierror:
         logger.warning(f"无法解析地址: {server_addr}")
     except OSError:
-        if status_data[server_name]:
-            add_msg(warning_message_seg)
-        status_data[server_name] = False
+        status_data[server_name] += 1
     else:
-        if not status_data[server_name]:
+        if status_data[server_name] >= 3:
             add_msg(restoration_message_seg)
-        status_data[server_name] = True
+        status_data[server_name] = 0
     finally:
+        if status_data[server_name] >= 3:
+            add_msg(warning_message_seg)
         logger.trace(f"检测完成: {status_data}")
 
 
