@@ -30,6 +30,7 @@ __plugin_meta__ = PluginMetadata(
 global_config = get_driver().config
 config = Config.parse_obj(global_config)
 host_mode = config.github_opengraph_host_mode
+opengraph_githubassets_host = config.github_opengraph_host_mode
 
 GITHUB_REGEXP = r"github.com/([a-zA-Z0-9-_]+/[a-zA-Z0-9-_/.]+)"
 
@@ -54,7 +55,7 @@ async def _(
     async with httpx.AsyncClient(timeout=60, verify=not host_mode) as client:
         if host_mode:
             response = await client.get(
-                f"https://{config.xas_github_opengraph_githubassets_host}/{hashlib.sha256(str(time.time()).encode())}/{result[0]}",
+                f"https://{opengraph_githubassets_host}/{hashlib.sha256(str(time.time()).encode())}/{result[0]}",
                 headers={"Host": "opengraph.githubassets.com"},
             )
         else:

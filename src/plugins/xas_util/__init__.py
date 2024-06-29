@@ -16,6 +16,8 @@ __plugin_meta__ = PluginMetadata(
 global_config = get_driver().config
 config = Config.parse_obj(global_config)
 
+trusted_channel = config.xas_trusted_channel
+
 
 def create_quote_or_at_message(event: MessageCreatedEvent):
     return (
@@ -34,8 +36,4 @@ async def rule_check_tome(event: MessageCreatedEvent):
 
 
 async def rule_check_trust(event: MessageCreatedEvent):
-    return (
-        event.channel
-        and event.channel.id in config.xas_trusted_channel
-        or event.is_tome()
-    )
+    return event.channel and event.channel.id in trusted_channel or event.is_tome()

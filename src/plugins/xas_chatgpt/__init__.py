@@ -56,10 +56,14 @@ config = Config.parse_obj(global_config)
 extend_list = []
 data_dir = get_data_dir(__plugin_meta__.name)
 system_prompt_file_dir = data_dir / "system_prompt.json"
-default_prompt = config.xas_chatgpt_default_prompt
 system_prompt_config: Dict[SessionId, str] = {}
 context_dict: Dict[SessionId, Context] = {}
 lock_dict: Dict[SessionId, Lock] = {}
+
+enable_channel = config.xas_chatgpt_enable_channel
+default_model = config.xas_chatgpt_default_model
+default_prompt = config.xas_chatgpt_default_prompt
+context_validity_period = config.xas_chatgpt_context_validity_period
 
 
 def save_system_prompt():
@@ -74,7 +78,7 @@ def save_system_prompt():
 def set_default_context(channel_id: str):
     context_dict[channel_id] = {
         "messages": [],
-        "model": config.xas_chatgpt_default_model,
+        "model": default_model,
         "last_time": datetime.now(),
         "extend_data": {},
     }
@@ -92,9 +96,7 @@ def register_extend(extend: Callable[[dict], dict]):
 
 
 async def rule_check_enable(event: MessageCreatedEvent):
-    is_correct_cannel = bool(
-        event.channel and (event.channel.id in config.xas_chatgpt_enable_channel)
-    )
+    is_correct_cannel = bool(event.channel and (event.channel.id in enable_channel))
     match_result = re.match(r"^private:(.+)$", event.channel and event.channel.id)
     is_private = match_result
     is_correct_private = is_private and match_result.group(1) == event.user.id
@@ -140,7 +142,7 @@ async def chat(
     if (
         channel_id not in context_dict
         or context_dict[channel_id]["last_time"]
-        + timedelta(seconds=config.xas_chatgpt_context_validity_period)
+        + timedelta(seconds=context_validity_period)
         < datetime.now()
     ):
         set_default_context(channel_id)
@@ -157,7 +159,7 @@ async def chat(
     try:
         print(event)
         answer, new_messages = await ChatGPT.chat(
-            f"{(event.member and event.member.name) or (event.member and event.member.nick)}"
+            f"{event.member and event.member.nick}"
             f"({event.get_user_id()}): {message_text}",
             messages,
             system_prompt,
