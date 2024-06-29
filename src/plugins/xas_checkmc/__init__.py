@@ -48,7 +48,7 @@ async def check_server(server_name: str, add_msg: Callable[[MessageSegment], Non
             add_msg(restoration_message_seg)
         status_data[server_name] = 0
     finally:
-        if status_data[server_name] >= 3:
+        if status_data[server_name] == 3:
             add_msg(warning_message_seg)
         logger.trace(f"检测完成: {status_data}")
 
