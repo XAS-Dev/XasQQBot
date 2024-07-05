@@ -30,7 +30,7 @@ __plugin_meta__ = PluginMetadata(
 global_config = get_driver().config
 config = Config.parse_obj(global_config)
 host_mode = config.github_opengraph_host_mode
-opengraph_githubassets_host = config.github_opengraph_host_mode
+opengraph_githubassets_host = config.xas_github_opengraph_githubassets_host
 
 GITHUB_REGEXP = r"github.com/([a-zA-Z0-9-_]+/[a-zA-Z0-9-_/.]+)"
 
