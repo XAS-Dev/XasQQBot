@@ -1,4 +1,5 @@
 import asyncio
+import dns.resolver
 from socket import gaierror
 from typing_extensions import Callable
 
@@ -28,6 +29,7 @@ config = Config.parse_obj(global_config)
 groups = config.xas_checkmc_groups
 server_data = config.xas_checkmc_servers
 status_data: dict[str, int] = {server_name: 0 for server_name in server_data}
+fail_count = config.xas_checkmc_fail_count
 
 
 async def check_server(server_name: str, add_msg: Callable[[MessageSegment], None]):
@@ -41,16 +43,18 @@ async def check_server(server_name: str, add_msg: Callable[[MessageSegment], Non
         status_data[server_name] += 1
     except gaierror:
         logger.warning(f"无法解析地址: {server_addr}")
+    except dns.resolver.LifetimeTimeout:
+        logger.warning(f"DNS 超时: {server_addr}")
     except OSError:
         status_data[server_name] += 1
     else:
-        if status_data[server_name] >= 3:
+        if status_data[server_name] >= fail_count:
             add_msg(restoration_message_seg)
         status_data[server_name] = 0
     finally:
-        if status_data[server_name] == 3:
+        if status_data[server_name] == fail_count:
             add_msg(warning_message_seg)
-        logger.trace(f"检测完成: {status_data}")
+        logger.trace(f"检测完成: {server_name}->{status_data[server_name]}")
 
 
 async def send_msg(message: Message):
@@ -58,8 +62,9 @@ async def send_msg(message: Message):
         await get_bot().call_api("send_message", channel=group, message=message)
 
 
-@scheduler.scheduled_job("cron", second="0,30")
+@scheduler.scheduled_job(trigger="cron", second="0")
 async def check():
+    logger.trace("检测中...")
     message = Message()
 
     def add_msg(message_seg: MessageSegment):
@@ -70,6 +75,7 @@ async def check():
         for server_name in server_data
     ]
     await asyncio.wait(tasks)
+    logger.trace(f"检测完成 -> {status_data}")
     if not message:
         return
     await send_msg(message)
