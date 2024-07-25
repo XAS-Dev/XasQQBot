@@ -40,12 +40,14 @@ async def check_server(server_name: str, add_msg: Callable[[MessageSegment], Non
         server = await JavaServer.async_lookup(server_addr)
         await server.async_status()
     except TimeoutError:
+        logger.warning(f"连接超时: {server_addr}")
         status_data[server_name] += 1
     except gaierror:
         logger.warning(f"无法解析地址: {server_addr}")
     except dns.resolver.LifetimeTimeout:
         logger.warning(f"DNS 超时: {server_addr}")
     except OSError:
+        logger.warning(f"连接错误: {server_addr}")
         status_data[server_name] += 1
     else:
         if status_data[server_name] >= fail_count:
