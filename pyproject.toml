@@ -3,7 +3,7 @@ name = "XAS-QQBot-v2"
 version = "2.1.1"
 description = "Default template for PDM package"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = "==3.11.*"
 authors = [{ name = "XiYang6666", email = "1782356858@qq.com" }]
 dependencies = [
     "nonebot-adapter-satori>=0.8.3",
