@@ -76,7 +76,7 @@ async def check():
         asyncio.create_task(check_server(server_name, add_msg))
         for server_name in server_data
     ]
-    await asyncio.wait(tasks)
+    await asyncio.wait(tasks) if tasks else ...
     logger.trace(f"检测完成 -> {status_data}")
     if not message:
         return
