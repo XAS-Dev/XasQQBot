@@ -9,4 +9,4 @@ RUN pip install pdm nb-cli -i ${MIRROR}
 RUN pdm config pypi.url ${MIRROR}
 RUN pdm install
 
-ENTRYPOINT [ "nb","run","--reload" ]
+ENTRYPOINT [ "nb", "run", "--reload" ]
