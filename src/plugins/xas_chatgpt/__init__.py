@@ -1,6 +1,6 @@
 import json
 import re
-from typing import Dict, List, Callable
+from typing import Any, Dict, List, Callable, Coroutine
 from datetime import datetime, timedelta
 from asyncio import Lock
 
@@ -39,7 +39,7 @@ class Context(TypedDict):
     messages: List[ChatCompletionMessageParam]
     model: str
     last_time: datetime
-    extend_data: Dict[str, str]
+    extend_placeholder: Dict[str, str]
 
 
 __plugin_meta__ = PluginMetadata(
@@ -53,7 +53,6 @@ SessionId = str
 
 global_config = get_driver().config
 config = Config.parse_obj(global_config)
-extend_list = []
 data_dir = get_data_dir(__plugin_meta__.name)
 system_prompt_file_dir = data_dir / "system_prompt.json"
 system_prompt_config: Dict[SessionId, str] = {}
@@ -80,7 +79,7 @@ def set_default_context(channel_id: str):
         "messages": [],
         "model": default_model,
         "last_time": datetime.now(),
-        "extend_data": {},
+        "extend_placeholder": {},
     }
 
 
@@ -89,10 +88,6 @@ if system_prompt_file_dir.exists():
         system_prompt_config = json.load(fr)
 else:
     save_system_prompt()
-
-
-def register_extend(extend: Callable[[dict], dict]):
-    extend_list.append(extend)
 
 
 async def rule_check_enable(event: MessageCreatedEvent):
@@ -149,18 +144,22 @@ async def chat(
         logger.trace("超时或不存在上下文, 上下文已设置为默认值.")
     context_dict[channel_id]["last_time"] = datetime.now()
     messages = context_dict[channel_id]["messages"]
-    extend_data = context_dict[channel_id]["extend_data"]
-    extend_data = {**extend_data, "now_tine": str(datetime.now())}
-
-    for extend in extend_list:
-        extend_data.update(extend(extend_data))
+    placeholder_data = context_dict[channel_id]["extend_placeholder"]
+    placeholder_data = {**placeholder_data, "now_tine": str(datetime.now())}
     system_prompt = system_prompt_config.get(channel_id) or default_prompt
-    system_prompt = system_prompt.format_map(extend_data)
+    system_prompt = system_prompt.format_map(placeholder_data)
+    name = (event.user and event.user.nick or event.user.name) or (event.member and event.member.nick) 
+    question = (
+        f"{name}({event.get_user_id()}): {message_text}"
+    )
+    # emit ask event
+    ask_event = ChatAskEvent(question)
+    for listener in chat_ask_listener:
+        await listener(ask_event)
     try:
         print(event)
         answer, new_messages = await ChatGPT.chat(
-            f"{event.member and event.member.nick}"
-            f"({event.get_user_id()}): {message_text}",
+            ask_event.message,
             messages,
             system_prompt,
         )
@@ -171,9 +170,13 @@ async def chat(
         lock_dict[event.get_session_id()].release()
         logger.trace(f"{event.get_session_id()} 已解锁.")
     context_dict[channel_id]["messages"] = new_messages
+    # emit answer event
+    answer_event = ChatAnswerEvent(answer)
+    for listener in chat_answer_listener:
+        await listener(answer_event)
     logger.trace(new_messages)
-    logger.success(create_quote_or_at_message(event) + answer)
-    await matcher.finish(create_quote_or_at_message(event) + answer)
+    logger.success(create_quote_or_at_message(event) + answer_event.message)
+    await matcher.finish(create_quote_or_at_message(event) + answer_event.message)
 
 
 SwitchGPT3 = on_command(
@@ -299,3 +302,32 @@ async def clean_message(matcher: Matcher, event: MessageCreatedEvent):
             create_quote_or_at_message(event) + f"已清除 {quantity} 条对话记录."
         )
     await matcher.finish(create_quote_or_at_message(event) + "没有对话记录")
+
+
+# Export APIs
+
+
+class ChatAskEvent:
+    message: str
+
+    def __init__(self, message: str):
+        self.message = message
+
+
+class ChatAnswerEvent:
+    message: str
+
+    def __init__(self, message: str):
+        self.message = message
+
+
+chat_ask_listener: list[Callable[[ChatAskEvent], Coroutine[Any, Any, None]]] = []
+chat_answer_listener: list[Callable[[ChatAnswerEvent], Coroutine[Any, Any, None]]] = []
+
+
+def on_chat_ask(listener: Callable[[ChatAskEvent], Coroutine[Any, Any, None]]):
+    chat_ask_listener.append(listener)
+
+
+def on_chat_answer(listener: Callable[[ChatAnswerEvent], Coroutine[Any, Any, None]]):
+    chat_answer_listener.append(listener)
