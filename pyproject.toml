@@ -1,5 +1,5 @@
 [project]
-name = "XAS-QQBot-v2"
+name = "XAS-QQBot"
 version = "2.1.1"
 description = "Default template for PDM package"
 readme = "README.md"
