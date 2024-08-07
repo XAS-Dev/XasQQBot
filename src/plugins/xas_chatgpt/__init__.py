@@ -61,6 +61,7 @@ lock_dict: Dict[SessionId, Lock] = {}
 
 enable_channel = config.xas_chatgpt_enable_channel
 default_model = config.xas_chatgpt_default_model
+advanced_model = config.xas_chatgpt_advanced_model
 default_prompt = config.xas_chatgpt_default_prompt
 context_validity_period = config.xas_chatgpt_context_validity_period
 
@@ -181,36 +182,40 @@ async def chat(
     await matcher.finish(create_quote_or_at_message(event) + answer_event.message)
 
 
-SwitchGPT3 = on_command(
+SwitchBaseModel = on_command(
     "切换GPT3.5",
     aliases={"变baka"},
     rule=Rule(rule_check_trust) & Rule(rule_check_enable),
 )
 
 
-@SwitchGPT3.handle()
+@SwitchBaseModel.handle()
 async def switch_gpt3(matcher: Matcher, event: MessageCreatedEvent):
     channel_id: str = event.channel and event.channel.id  # type: ignore
     if channel_id not in context_dict:
         set_default_context(channel_id)
-    context_dict[channel_id]["model"] = "gpt-4o-mini"
-    await matcher.finish(create_quote_or_at_message(event) + "已切换到 ChatGPT3.5.")
+    context_dict[channel_id]["model"] = default_model
+    await matcher.finish(
+        create_quote_or_at_message(event) + f"已切换到 {default_model}"
+    )
 
 
-SwitchGPT4 = on_command(
+SwitchAdvancedModel = on_command(
     "切换GPT4",
     aliases={"变聪明", "IQBoost"},
     rule=Rule(rule_check_trust) & Rule(rule_check_enable),
 )
 
 
-@SwitchGPT4.handle()
+@SwitchAdvancedModel.handle()
 async def switch_gpt4(matcher: Matcher, event: MessageCreatedEvent):
     channel_id: str = event.channel and event.channel.id  # type: ignore
     if channel_id not in context_dict:
         set_default_context(channel_id)
-    context_dict[channel_id]["model"] = "gpt-4-turbo"
-    await matcher.finish(create_quote_or_at_message(event) + "已切换到 GPT4.")
+    context_dict[channel_id]["model"] = advanced_model
+    await matcher.finish(
+        create_quote_or_at_message(event) + f"已切换到 {advanced_model}"
+    )
 
 
 ViewModel = on_command(
