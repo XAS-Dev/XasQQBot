@@ -22,7 +22,9 @@ class ChatGPT:
     ) -> Tuple[str, List[ChatCompletionMessageParam]]:
 
         client = AsyncOpenAI(
-            api_key=config.xas_chatgpt_key, base_url=config.xas_chatgpt_api
+            api_key=config.xas_chatgpt_key,
+            base_url=config.xas_chatgpt_api,
+            timeout=60,
         )
         messages = [
             *context,
