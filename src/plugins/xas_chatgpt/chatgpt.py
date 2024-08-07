@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
@@ -18,6 +18,7 @@ class ChatGPT:
         message: str,
         context: List[ChatCompletionMessageParam],
         system_prompt: str,
+        model: str = "gpt-3.5-turbo",
     ) -> Tuple[str, List[ChatCompletionMessageParam]]:
 
         client = AsyncOpenAI(
@@ -29,7 +30,7 @@ class ChatGPT:
         ]
         logger.trace(f"{message}; {messages}; {system_prompt}")
         response = await client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=model,
             messages=[{"role": "system", "content": system_prompt}, *messages],
         )
         answer = response.choices[0].message.content

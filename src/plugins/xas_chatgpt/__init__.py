@@ -148,10 +148,11 @@ async def chat(
     placeholder_data = {**placeholder_data, "now_tine": str(datetime.now())}
     system_prompt = system_prompt_config.get(channel_id) or default_prompt
     system_prompt = system_prompt.format_map(placeholder_data)
-    name = (event.user and event.user.nick or event.user.name) or (event.member and event.member.nick) 
-    question = (
-        f"{name}({event.get_user_id()}): {message_text}"
+    model = context_dict[channel_id]["model"]
+    name = (event.member and event.member.nick) or (
+        event.user and event.user.nick or event.user.name
     )
+    question = f"{name}({event.get_user_id()}): {message_text}"
     # emit ask event
     ask_event = ChatAskEvent(question)
     for listener in chat_ask_listener:
@@ -162,6 +163,7 @@ async def chat(
             ask_event.message,
             messages,
             system_prompt,
+            model,
         )
     except APIConnectionError:
         logger.error(create_quote_or_at_message(event) + "错误: API连接错误.")
@@ -191,7 +193,7 @@ async def switch_gpt3(matcher: Matcher, event: MessageCreatedEvent):
     channel_id: str = event.channel and event.channel.id  # type: ignore
     if channel_id not in context_dict:
         set_default_context(channel_id)
-    context_dict[channel_id]["model"] = "gpt-3.5-turbo"
+    context_dict[channel_id]["model"] = "gpt-4o-mini"
     await matcher.finish(create_quote_or_at_message(event) + "已切换到 ChatGPT3.5.")
 
 
@@ -207,7 +209,7 @@ async def switch_gpt4(matcher: Matcher, event: MessageCreatedEvent):
     channel_id: str = event.channel and event.channel.id  # type: ignore
     if channel_id not in context_dict:
         set_default_context(channel_id)
-    context_dict[channel_id]["model"] = "gpt-4"
+    context_dict[channel_id]["model"] = "gpt-4-turbo"
     await matcher.finish(create_quote_or_at_message(event) + "已切换到 GPT4.")
 
 
