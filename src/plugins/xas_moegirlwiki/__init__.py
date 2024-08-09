@@ -88,7 +88,7 @@ async def search(
         )
         param = f"{page['title']}"
         result_message.append(
-            f"  https://mzh.moegirl.org.cn/{urllib.parse.quote(param) if ' ' in param else param}\n\n"
+            f"  https://mzh.moegirl.org.cn/{urllib.parse.quote(param)}\n\n"
         )
 
     await matcher.finish(result_message)
