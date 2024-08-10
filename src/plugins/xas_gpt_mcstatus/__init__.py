@@ -38,11 +38,11 @@ status: Optional[JavaStatusResponse] = None
 async def chat_ask_listener(event: ChatAskEvent):
     prefix = ""
     if status is None:
-        prefix = "目前无法获取你的状态.\n"
+        prefix = "目前无法获取服务器状态.\n"
         event.message = prefix + event.message
         return
-    prefix = f"f你目前有 {status.players.online}/{status.players.max} 名玩家在线.\n"
-    if status.players.sample is None:
+    prefix = f"服务器目前有 {status.players.online}/{status.players.max} 名玩家在线.\n"
+    if not status.players.sample:
         event.message = prefix + event.message
         return
     prefix += f"分别为 {','.join([i.name for i in status.players.sample])}\n"
