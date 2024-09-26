@@ -10,8 +10,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - run: git fetch --unshallow
+        with:
+          fetch-depth: 0
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v3
