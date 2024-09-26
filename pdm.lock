@@ -246,7 +246,7 @@ files = [
 
 [[package]]
 name = "httpx"
-version = "0.27.0"
+version = "0.27.2"
 requires_python = ">=3.8"
 summary = "The next generation HTTP client."
 groups = ["default"]
@@ -258,24 +258,24 @@ dependencies = [
     "sniffio",
 ]
 files = [
-    {file = "httpx-0.27.0-py3-none-any.whl", hash = "sha256:71d5465162c13681bff01ad59b2cc68dd838ea1f10e51574bac27103f00c91a5"},
-    {file = "httpx-0.27.0.tar.gz", hash = "sha256:a0cb88a46f32dc874e04ee956e4c2764aba2aa228f650b06788ba6bda2962ab5"},
+    {file = "httpx-0.27.2-py3-none-any.whl", hash = "sha256:7bb2708e112d8fdd7829cd4243970f0c223274051cb35ee80c03301ee29a3df0"},
+    {file = "httpx-0.27.2.tar.gz", hash = "sha256:f7c2be1d2f3c3c3160d441802406b206c2b76f5947b11115e6df10c6c65e66c2"},
 ]
 
 [[package]]
 name = "httpx"
-version = "0.27.0"
+version = "0.27.2"
 extras = ["http2"]
 requires_python = ">=3.8"
 summary = "The next generation HTTP client."
 groups = ["default"]
 dependencies = [
     "h2<5,>=3",
-    "httpx==0.27.0",
+    "httpx==0.27.2",
 ]
 files = [
-    {file = "httpx-0.27.0-py3-none-any.whl", hash = "sha256:71d5465162c13681bff01ad59b2cc68dd838ea1f10e51574bac27103f00c91a5"},
-    {file = "httpx-0.27.0.tar.gz", hash = "sha256:a0cb88a46f32dc874e04ee956e4c2764aba2aa228f650b06788ba6bda2962ab5"},
+    {file = "httpx-0.27.2-py3-none-any.whl", hash = "sha256:7bb2708e112d8fdd7829cd4243970f0c223274051cb35ee80c03301ee29a3df0"},
+    {file = "httpx-0.27.2.tar.gz", hash = "sha256:f7c2be1d2f3c3c3160d441802406b206c2b76f5947b11115e6df10c6c65e66c2"},
 ]
 
 [[package]]
@@ -441,7 +441,7 @@ files = [
 
 [[package]]
 name = "nonebot-adapter-satori"
-version = "0.12.3"
+version = "0.12.6"
 requires_python = ">=3.9"
 summary = "Satori Protocol Adapter for Nonebot2"
 groups = ["default"]
@@ -449,8 +449,8 @@ dependencies = [
     "nonebot2>=2.3.0",
 ]
 files = [
-    {file = "nonebot_adapter_satori-0.12.3-py3-none-any.whl", hash = "sha256:94670f6a558cee185b42470dbd928d747c3ba72bea4f98f391ab2c41e3b79e27"},
-    {file = "nonebot_adapter_satori-0.12.3.tar.gz", hash = "sha256:5c2bd09fde92b36d863ba7cd85d5ca0fe8680ec2489d657f7ad8b0958cb9d9d8"},
+    {file = "nonebot_adapter_satori-0.12.6-py3-none-any.whl", hash = "sha256:b15d9a8d90e0ceb9a133d6443b505c9e3e1df65a5ae77719022a1c20b1d96f83"},
+    {file = "nonebot_adapter_satori-0.12.6.tar.gz", hash = "sha256:afce9c5ded45ca302b8c42c5ad13c675ca956d00dc47dc99e0bc5acf7e62d093"},
 ]
 
 [[package]]
@@ -487,7 +487,7 @@ files = [
 
 [[package]]
 name = "nonebot2"
-version = "2.3.2"
+version = "2.3.3"
 requires_python = "<4.0,>=3.9"
 summary = "An asynchronous python bot framework."
 groups = ["default"]
@@ -501,13 +501,13 @@ dependencies = [
     "yarl<2.0.0,>=1.7.2",
 ]
 files = [
-    {file = "nonebot2-2.3.2-py3-none-any.whl", hash = "sha256:c51aa3c1f23d8062ce6d13c8423dcb9a8bf0c44f21687916095f825da79a9a55"},
-    {file = "nonebot2-2.3.2.tar.gz", hash = "sha256:af52e27e03e7fe147f2b642151eec81f264d058efe53b974eb08b5d90177cd14"},
+    {file = "nonebot2-2.3.3-py3-none-any.whl", hash = "sha256:5bc8d073091347f29c4a1a2f927c24a8941e5d286c77139376259318b9bbfc68"},
+    {file = "nonebot2-2.3.3.tar.gz", hash = "sha256:4fa7707de5d708c27cc49493bc78a07fee2ba01f5516835a2ea5fbebb49b9dfa"},
 ]
 
 [[package]]
 name = "nonebot2"
-version = "2.3.2"
+version = "2.3.3"
 extras = ["fastapi", "httpx", "websockets"]
 requires_python = "<4.0,>=3.9"
 summary = "An asynchronous python bot framework."
@@ -515,18 +515,18 @@ groups = ["default"]
 dependencies = [
     "fastapi<1.0.0,>=0.93.0",
     "httpx[http2]<1.0.0,>=0.20.0",
-    "nonebot2==2.3.2",
+    "nonebot2==2.3.3",
     "uvicorn[standard]<1.0.0,>=0.20.0",
     "websockets>=10.0",
 ]
 files = [
-    {file = "nonebot2-2.3.2-py3-none-any.whl", hash = "sha256:c51aa3c1f23d8062ce6d13c8423dcb9a8bf0c44f21687916095f825da79a9a55"},
-    {file = "nonebot2-2.3.2.tar.gz", hash = "sha256:af52e27e03e7fe147f2b642151eec81f264d058efe53b974eb08b5d90177cd14"},
+    {file = "nonebot2-2.3.3-py3-none-any.whl", hash = "sha256:5bc8d073091347f29c4a1a2f927c24a8941e5d286c77139376259318b9bbfc68"},
+    {file = "nonebot2-2.3.3.tar.gz", hash = "sha256:4fa7707de5d708c27cc49493bc78a07fee2ba01f5516835a2ea5fbebb49b9dfa"},
 ]
 
 [[package]]
 name = "openai"
-version = "1.40.2"
+version = "1.48.0"
 requires_python = ">=3.7.1"
 summary = "The official Python library for the openai API"
 groups = ["default"]
@@ -542,8 +542,8 @@ dependencies = [
     "typing-extensions<5,>=4.11",
 ]
 files = [
-    {file = "openai-1.40.2-py3-none-any.whl", hash = "sha256:38068f858f310b4fd4b0ea8734c3efcfde3c15a2978311e1453bd84817231b96"},
-    {file = "openai-1.40.2.tar.gz", hash = "sha256:2180e9070bd36084328248b3ce668964e8ddd2e9019e1d426e31dc54cc117bb5"},
+    {file = "openai-1.48.0-py3-none-any.whl", hash = "sha256:7c4af223f0bf615ce4a12453729952c9a8b04ffe8c78aa77981b12fd970149cf"},
+    {file = "openai-1.48.0.tar.gz", hash = "sha256:1d3b69ea62c287c4885a6f3ce840768564cd5f52c60ac5f890fef80d43cc4799"},
 ]
 
 [[package]]
