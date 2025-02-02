@@ -61,7 +61,6 @@ async def search(
         )
     data = response.json()
     processed_data: List[Page] = []
-    print(data)
     for page in data["query"]["pages"]:
         processed_data.append(
             {
@@ -78,7 +77,6 @@ async def search(
     result_message = Message()
     result_message.append("猜你想搜: \n")
     for page in processed_data[:3]:
-        print(page)
         result_message.append(f"{page['index']}. {page['title']}\n")
         result_message.append(f"  tag: {' '.join(page['categories'])}\n" if page["categories"] else "")
         param = f"{page['title']}"

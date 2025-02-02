@@ -12,14 +12,13 @@ from nonebot_plugin_apscheduler import (  # pylint: disable=C0411,C0413,E0402  #
 )
 
 require("xas_chatgpt")
-
-from ..xas_chatgpt import (  # pylint: disable=C0411,C0413,E0402  # noqa: E402
+from ..xas_chatgpt.api import (  # pylint: disable=C0411,C0413,E0402  # noqa: E402
     ChatAskEvent,
     on_chat_ask,
 )
 
 __plugin_meta__ = PluginMetadata(
-    name="xas_gpt_mcstatus",
+    name="xas_chat_mcstatus",
     description="",
     usage="",
     config=Config,
@@ -38,13 +37,10 @@ async def chat_ask_listener(event: ChatAskEvent):
     prefix = ""
     if status is None:
         prefix = "目前无法获取服务器状态.\n"
-        event.message = prefix + event.message
-        return
-    prefix = f"服务器目前有 {status.players.online}/{status.players.max} 名玩家在线.\n"
-    if not status.players.sample:
-        event.message = prefix + event.message
-        return
-    prefix += f"分别为 {','.join([i.name for i in status.players.sample])}\n"
+    else:
+        prefix = f"服务器目前有 {status.players.online}/{status.players.max} 名玩家在线.\n"
+    if status and status.players.sample:
+        prefix += f"分别为 {','.join([i.name for i in status.players.sample])}\n"
     event.message = prefix + event.message
 
 

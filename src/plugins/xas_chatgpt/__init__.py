@@ -2,7 +2,7 @@ import json
 import re
 from asyncio import Lock
 from datetime import datetime, timedelta
-from typing import Any, Callable, Coroutine, Dict, List
+from typing import Dict, List
 
 from nonebot import get_driver, get_plugin_config
 from nonebot.adapters.satori.event import MessageCreatedEvent
@@ -13,10 +13,11 @@ from nonebot.params import CommandArg, EventPlainText
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata, on_command, on_message, require
 from nonebot.rule import Rule
-from openai import APIConnectionError
+from openai import APIConnectionError, InternalServerError
 from openai.types.chat import ChatCompletionMessageParam
 from typing_extensions import TypedDict
 
+from .api import ChatAnswerEvent, ChatAskEvent, ChatInitEvent, chat_answer_listener, chat_ask_listener, chat_init_listener
 from .chatgpt import ChatGPT
 from .config import Config
 
@@ -32,12 +33,19 @@ from nonebot_plugin_localstore import (  # pylint: disable=C0411,C0413,E0402  # 
     get_data_dir,
 )
 
+__plugin_meta__ = PluginMetadata(
+    name="xas_chatgpt",
+    description="",
+    usage="",
+    config=Config,
+)
+
 
 class Context(TypedDict):
+    system_prompt: str
     messages: List[ChatCompletionMessageParam]
     model: str
     last_time: datetime
-    extend_placeholder: Dict[str, str]
 
 
 __plugin_meta__ = PluginMetadata(
@@ -70,23 +78,53 @@ def save_system_prompt():
         "w",
         encoding="utf-8",
     ) as fw:
-        json.dump(system_prompt_config, fw)  # type: ignore
+        json.dump(system_prompt_config, fw, indent=4, ensure_ascii=False)  # type: ignore
 
 
-def set_default_context(channel_id: str):
+async def set_default_context(channel_id: str):
+    # emit init event
+    system_prompt = system_prompt_config.get(channel_id) or default_prompt
+    event_result = await emit_chat_init_event(channel_id, system_prompt)
     context_dict[channel_id] = {
+        "system_prompt": event_result.system_prompt,
         "messages": [],
         "model": default_model,
         "last_time": datetime.now(),
-        "extend_placeholder": {},
     }
 
 
+# 加载系统提示词配置
 if system_prompt_file_dir.exists():
     with open(system_prompt_file_dir, encoding="utf-8") as fr:
         system_prompt_config = json.load(fr)
 else:
     save_system_prompt()
+
+# ===== Emitter =====
+
+
+async def emit_chat_init_event(channel_id: str, system_prompt: str):
+    init_event = ChatInitEvent(channel_id, system_prompt)
+    for listener in chat_init_listener:
+        await listener(init_event)
+    return init_event
+
+
+async def emit_chat_ask_event(channel_id, question: str):
+    ask_event = ChatAskEvent(channel_id, message=question)
+    for listener in chat_ask_listener:
+        await listener(ask_event)
+    return ask_event
+
+
+async def emit_chat_answer_event(channel_id, answer: str):
+    answer_event = ChatAnswerEvent(channel_id, message=answer)
+    for listener in chat_answer_listener:
+        await listener(answer_event)
+    return answer_event
+
+
+# ===== 规则 =====
 
 
 async def rule_check_enable(event: MessageCreatedEvent):
@@ -111,6 +149,8 @@ async def rule_check_is_message(message=EventPlainText()):
     return result
 
 
+# ===== 聊天 =====
+
 Chat = on_message(
     priority=10,
     rule=Rule(rule_check_tome) & Rule(rule_check_not_command) & Rule(rule_check_is_message) & Rule(rule_check_enable),
@@ -124,54 +164,56 @@ async def chat(
     message_text=EventPlainText(),
 ):
     logger.success("触发ChatGPT")
-    if event.get_session_id() not in lock_dict:
-        lock_dict[event.get_session_id()] = Lock()
-    logger.trace(f"{event.get_session_id()} 已加锁.")
-    await lock_dict[event.get_session_id()].acquire()
-
     channel_id: str = event.channel and event.channel.id  # type: ignore
+
+    lock_dict.setdefault(channel_id, Lock())
+    logger.trace(f"{channel_id} 已加锁.")
+    await lock_dict[channel_id].acquire()
+
     if channel_id not in context_dict or context_dict[channel_id]["last_time"] + timedelta(seconds=context_validity_period) < datetime.now():
-        set_default_context(channel_id)
+        await set_default_context(channel_id)
         logger.trace("超时或不存在上下文, 上下文已设置为默认值.")
-    context_dict[channel_id]["last_time"] = datetime.now()
+    context_dict[channel_id]["last_time"] = datetime.now()  # 更新上下文时间
+
+    system_prompt = context_dict[channel_id]["system_prompt"]
     messages = context_dict[channel_id]["messages"]
-    placeholder_data = context_dict[channel_id]["extend_placeholder"]
-    placeholder_data = {**placeholder_data, "now_tine": str(datetime.now())}
-    system_prompt = system_prompt_config.get(channel_id) or default_prompt
-    system_prompt = system_prompt.format_map(placeholder_data)
     model = context_dict[channel_id]["model"]
     name = (event.member and event.member.nick) or (event.user and event.user.nick or event.user.name)
     question = f"{name}({event.get_user_id()}): {message_text}"
     # emit ask event
-    ask_event = ChatAskEvent(question)
-    for listener in chat_ask_listener:
-        await listener(ask_event)
+    event_result = await emit_chat_ask_event(channel_id, question)
+    question = event_result.message
+    # chat with chatgpt
     try:
-        print(event)
         answer, new_messages = await ChatGPT.chat(
-            ask_event.message,
+            question,
             messages,
             system_prompt,
             model,
         )
-    except APIConnectionError:
-        logger.error(create_quote_or_at_message(event) + "错误: API连接错误.")
+    except APIConnectionError as e:
+        logger.error(create_quote_or_at_message(event) + "错误: API连接错误." + e.message)
         await matcher.finish(create_quote_or_at_message(event) + "错误: API连接错误.")
+    except InternalServerError as e:
+        logger.error(create_quote_or_at_message(event) + "错误: 服务器内部错误." + e.message)
+        await matcher.finish(create_quote_or_at_message(event) + "错误: 服务器内部错误.")
     finally:
-        lock_dict[event.get_session_id()].release()
-        logger.trace(f"{event.get_session_id()} 已解锁.")
+        lock_dict[channel_id].release()
+        logger.trace(f"{channel_id} 已解锁.")
     context_dict[channel_id]["messages"] = new_messages
     # emit answer event
-    answer_event = ChatAnswerEvent(answer)
-    for listener in chat_answer_listener:
-        await listener(answer_event)
-    logger.trace(new_messages)
-    logger.success(create_quote_or_at_message(event) + answer_event.message)
-    await matcher.finish(create_quote_or_at_message(event) + answer_event.message)
+    event_result = await emit_chat_answer_event(channel_id, answer)
+    answer = event_result.message
 
+    logger.trace(f"最终回复: {answer}")
+    logger.success(create_quote_or_at_message(event) + answer)
+    await matcher.finish(create_quote_or_at_message(event) + answer)
+
+
+# ===== 模型切换 =====
 
 SwitchBaseModel = on_command(
-    "切换GPT3.5",
+    "切换聊天模型",
     aliases={"变baka"},
     rule=Rule(rule_check_trust) & Rule(rule_check_enable),
 )
@@ -181,13 +223,13 @@ SwitchBaseModel = on_command(
 async def switch_gpt3(matcher: Matcher, event: MessageCreatedEvent):
     channel_id: str = event.channel and event.channel.id  # type: ignore
     if channel_id not in context_dict:
-        set_default_context(channel_id)
+        await set_default_context(channel_id)
     context_dict[channel_id]["model"] = default_model
     await matcher.finish(create_quote_or_at_message(event) + f"已切换到 {default_model}")
 
 
 SwitchAdvancedModel = on_command(
-    "切换GPT4",
+    "切换推理模型",
     aliases={"变聪明", "IQBoost"},
     rule=Rule(rule_check_trust) & Rule(rule_check_enable),
 )
@@ -197,7 +239,7 @@ SwitchAdvancedModel = on_command(
 async def switch_gpt4(matcher: Matcher, event: MessageCreatedEvent):
     channel_id: str = event.channel and event.channel.id  # type: ignore
     if channel_id not in context_dict:
-        set_default_context(channel_id)
+        await set_default_context(channel_id)
     context_dict[channel_id]["model"] = advanced_model
     await matcher.finish(create_quote_or_at_message(event) + f"已切换到 {advanced_model}")
 
@@ -213,9 +255,11 @@ ViewModel = on_command(
 async def view_model(matcher: Matcher, event: MessageCreatedEvent):
     channel_id: str = event.channel and event.channel.id  # type: ignore
     if channel_id not in context_dict:
-        set_default_context(channel_id)
+        await set_default_context(channel_id)
     await matcher.finish(f"当前模型: {context_dict[channel_id]['model']}")
 
+
+# ===== 提示词设置 =====
 
 SetPrompt = on_command(
     "设置提示词",
@@ -231,9 +275,6 @@ async def set_prompt(
     arg_text: Message = CommandArg(),
 ):
     channel_id: str = event.channel and event.channel.id  # type: ignore
-    logger.trace(f"提示词: {arg_text}")
-    if channel_id not in system_prompt_config:
-        set_default_context(channel_id)
     system_prompt_config[channel_id] = arg_text.extract_plain_text()
     save_system_prompt()
     await matcher.finish(create_quote_or_at_message(event) + "设置完成")
@@ -271,10 +312,12 @@ async def clean_prompt(
 ):
     channel_id: str = event.channel and event.channel.id  # type: ignore
     if channel_id in system_prompt_config:
-        del system_prompt_config[channel_id]
+        system_prompt_config.pop(channel_id)
     save_system_prompt()
     await matcher.finish(create_quote_or_at_message(event) + "清除完成")
 
+
+# ===== 对话记录管理 =====
 
 CleanMessages = on_command("清除对话", aliases={"失忆"}, rule=Rule(rule_check_trust) & Rule(rule_check_enable))
 
@@ -284,35 +327,6 @@ async def clean_message(matcher: Matcher, event: MessageCreatedEvent):
     channel_id: str = event.channel and event.channel.id  # type: ignore
     if channel_id in context_dict:
         quantity = len(context_dict[channel_id]["messages"])
-        context_dict[channel_id]["messages"] = []
+        context_dict.pop(channel_id)
         await matcher.finish(create_quote_or_at_message(event) + f"已清除 {quantity} 条对话记录.")
     await matcher.finish(create_quote_or_at_message(event) + "没有对话记录")
-
-
-# Export APIs
-
-
-class ChatAskEvent:
-    message: str
-
-    def __init__(self, message: str):
-        self.message = message
-
-
-class ChatAnswerEvent:
-    message: str
-
-    def __init__(self, message: str):
-        self.message = message
-
-
-chat_ask_listener: list[Callable[[ChatAskEvent], Coroutine[Any, Any, None]]] = []
-chat_answer_listener: list[Callable[[ChatAnswerEvent], Coroutine[Any, Any, None]]] = []
-
-
-def on_chat_ask(listener: Callable[[ChatAskEvent], Coroutine[Any, Any, None]]):
-    chat_ask_listener.append(listener)
-
-
-def on_chat_answer(listener: Callable[[ChatAnswerEvent], Coroutine[Any, Any, None]]):
-    chat_answer_listener.append(listener)

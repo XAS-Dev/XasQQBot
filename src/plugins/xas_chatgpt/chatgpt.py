@@ -22,18 +22,24 @@ class ChatGPT:
         client = AsyncOpenAI(
             api_key=config.xas_chatgpt_key,
             base_url=config.xas_chatgpt_api,
-            timeout=60,
+            timeout=30,
         )
         messages = [
             *context,
             {"role": "user", "content": message},
         ]
-        logger.trace(f"{message}; {messages}; {system_prompt}")
+        logger.trace("调用ChatGPT")
+        logger.trace(f"模型:{model}")
+        logger.trace(f"消息:{message}")
+        logger.trace(f"上下文:{context}")
+        logger.trace(f"系统提示:{system_prompt}")
         response = await client.chat.completions.create(
             model=model,
             messages=[{"role": "system", "content": system_prompt}, *messages],
         )
-        answer = response.choices[0].message.content
+        answer = response.choices[0].message
+        answer_content = response.choices[0].message.content
         reasoning = response.choices[0].message.model_dump().get("reasoning_content", None)
         logger.debug(f"推理过程 -> {reasoning}")
-        return answer, [*messages, {"role": "assistant", "content": answer}]  # type: ignore
+        logger.debug(f"原始回答: {answer_content}")
+        return answer_content, [*messages, answer.model_dump()]  # type: ignore
