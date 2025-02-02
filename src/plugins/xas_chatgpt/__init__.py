@@ -203,7 +203,7 @@ async def switch_gpt4(matcher: Matcher, event: MessageCreatedEvent):
 
 
 ViewModel = on_command(
-    "查看模型",
+    "当前模型",
     aliases={"智商", "IQ"},
     rule=Rule(rule_check_trust) & Rule(rule_check_enable),
 )
