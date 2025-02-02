@@ -172,7 +172,7 @@ async def chat(
 
     if channel_id not in context_dict or context_dict[channel_id]["last_time"] + timedelta(seconds=context_validity_period) < datetime.now():
         await set_default_context(channel_id)
-        logger.trace("超时或不存在上下文, 上下文已设置为默认值.")
+        logger.debug("超时或不存在上下文, 上下文已设置为默认值.")
     context_dict[channel_id]["last_time"] = datetime.now()  # 更新上下文时间
 
     system_prompt = context_dict[channel_id]["system_prompt"]
@@ -205,7 +205,7 @@ async def chat(
     event_result = await emit_chat_answer_event(channel_id, answer)
     answer = event_result.message
 
-    logger.trace(f"最终回复: {answer}")
+    logger.debug(f"最终回复: {answer}")
     logger.success(create_quote_or_at_message(event) + answer)
     await matcher.finish(create_quote_or_at_message(event) + answer)
 
