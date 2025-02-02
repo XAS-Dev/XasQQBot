@@ -17,7 +17,6 @@ require("xas_chatgpt")
 from ..xas_chatgpt.api import (  # pylint: disable=C0411,C0413,E0402  # noqa: E402
     ChatAnswerEvent,
     ChatAskEvent,
-    on_chat_ask,
     ChatInitEvent,
     on_chat_answer,
     on_chat_ask,
@@ -80,7 +79,9 @@ on_chat_init(chat_init_listener)
 async def chat_ask_listener(event: ChatAskEvent):
     event.message = f"现在时间是{datetime.now()}\n{event.message}"
 
+
 on_chat_ask(chat_ask_listener)
+
 
 async def chat_answer_listener(event: ChatAnswerEvent):
     new_memory: list[Memory] = []
