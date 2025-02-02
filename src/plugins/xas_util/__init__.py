@@ -1,5 +1,3 @@
-from webbrowser import get
-
 from nonebot import get_plugin_config
 from nonebot.adapters.satori.event import MessageCreatedEvent
 from nonebot.adapters.satori.message import MessageSegment
