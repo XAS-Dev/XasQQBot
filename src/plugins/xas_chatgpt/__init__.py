@@ -1,36 +1,34 @@
 import json
 import re
-from typing import Any, Dict, List, Callable, Coroutine
-from datetime import datetime, timedelta
 from asyncio import Lock
+from datetime import datetime, timedelta
+from typing import Any, Callable, Coroutine, Dict, List
 
-from nonebot import get_driver
-from nonebot.log import logger
-from nonebot.rule import Rule
-from nonebot.plugin import PluginMetadata, require
-from nonebot.plugin import on_message, on_command
-from nonebot.params import EventPlainText, CommandArg
-from nonebot.matcher import Matcher
-from nonebot.permission import SUPERUSER
+from nonebot import get_driver, get_plugin_config
 from nonebot.adapters.satori.event import MessageCreatedEvent
 from nonebot.adapters.satori.message import Message
+from nonebot.log import logger
+from nonebot.matcher import Matcher
+from nonebot.params import CommandArg, EventPlainText
+from nonebot.permission import SUPERUSER
+from nonebot.plugin import PluginMetadata, on_command, on_message, require
+from nonebot.rule import Rule
 from openai import APIConnectionError
 from openai.types.chat import ChatCompletionMessageParam
 from typing_extensions import TypedDict
 
-
-from .config import Config
 from .chatgpt import ChatGPT
+from .config import Config
 
 require("xas_util")
 from ..xas_util import (  # pylint: disable=C0411,C0413,E0402  # noqa: E402
     create_quote_or_at_message,
-    rule_check_trust,
     rule_check_tome,
+    rule_check_trust,
 )
 
 require("nonebot_plugin_localstore")
-from nonebot_plugin_localstore import (  # pylint: disable=C0411,C0413   # noqa: E402
+from nonebot_plugin_localstore import (  # pylint: disable=C0411,C0413,E0402  # noqa: E402
     get_data_dir,
 )
 
@@ -49,10 +47,10 @@ __plugin_meta__ = PluginMetadata(
     config=Config,
 )
 
-SessionId = str
+type SessionId = str
 
 global_config = get_driver().config
-config = Config.parse_obj(global_config)
+config = get_plugin_config(Config)
 data_dir = get_data_dir(__plugin_meta__.name)
 system_prompt_file_dir = data_dir / "system_prompt.json"
 system_prompt_config: Dict[SessionId, str] = {}
@@ -115,10 +113,7 @@ async def rule_check_is_message(message=EventPlainText()):
 
 Chat = on_message(
     priority=10,
-    rule=Rule(rule_check_tome)
-    & Rule(rule_check_not_command)
-    & Rule(rule_check_is_message)
-    & Rule(rule_check_enable),
+    rule=Rule(rule_check_tome) & Rule(rule_check_not_command) & Rule(rule_check_is_message) & Rule(rule_check_enable),
 )
 
 
@@ -135,12 +130,7 @@ async def chat(
     await lock_dict[event.get_session_id()].acquire()
 
     channel_id: str = event.channel and event.channel.id  # type: ignore
-    if (
-        channel_id not in context_dict
-        or context_dict[channel_id]["last_time"]
-        + timedelta(seconds=context_validity_period)
-        < datetime.now()
-    ):
+    if channel_id not in context_dict or context_dict[channel_id]["last_time"] + timedelta(seconds=context_validity_period) < datetime.now():
         set_default_context(channel_id)
         logger.trace("超时或不存在上下文, 上下文已设置为默认值.")
     context_dict[channel_id]["last_time"] = datetime.now()
@@ -150,9 +140,7 @@ async def chat(
     system_prompt = system_prompt_config.get(channel_id) or default_prompt
     system_prompt = system_prompt.format_map(placeholder_data)
     model = context_dict[channel_id]["model"]
-    name = (event.member and event.member.nick) or (
-        event.user and event.user.nick or event.user.name
-    )
+    name = (event.member and event.member.nick) or (event.user and event.user.nick or event.user.name)
     question = f"{name}({event.get_user_id()}): {message_text}"
     # emit ask event
     ask_event = ChatAskEvent(question)
@@ -195,9 +183,7 @@ async def switch_gpt3(matcher: Matcher, event: MessageCreatedEvent):
     if channel_id not in context_dict:
         set_default_context(channel_id)
     context_dict[channel_id]["model"] = default_model
-    await matcher.finish(
-        create_quote_or_at_message(event) + f"已切换到 {default_model}"
-    )
+    await matcher.finish(create_quote_or_at_message(event) + f"已切换到 {default_model}")
 
 
 SwitchAdvancedModel = on_command(
@@ -213,9 +199,7 @@ async def switch_gpt4(matcher: Matcher, event: MessageCreatedEvent):
     if channel_id not in context_dict:
         set_default_context(channel_id)
     context_dict[channel_id]["model"] = advanced_model
-    await matcher.finish(
-        create_quote_or_at_message(event) + f"已切换到 {advanced_model}"
-    )
+    await matcher.finish(create_quote_or_at_message(event) + f"已切换到 {advanced_model}")
 
 
 ViewModel = on_command(
@@ -269,9 +253,7 @@ async def get_prompt(
 ):
     channel_id: str = event.channel and event.channel.id  # type: ignore
     if channel_id in system_prompt_config:
-        await matcher.finish(
-            create_quote_or_at_message(event) + system_prompt_config[channel_id]
-        )
+        await matcher.finish(create_quote_or_at_message(event) + system_prompt_config[channel_id])
     await matcher.finish(create_quote_or_at_message(event) + "[默认]" + default_prompt)
 
 
@@ -294,9 +276,7 @@ async def clean_prompt(
     await matcher.finish(create_quote_or_at_message(event) + "清除完成")
 
 
-CleanMessages = on_command(
-    "清除对话", aliases={"失忆"}, rule=Rule(rule_check_trust) & Rule(rule_check_enable)
-)
+CleanMessages = on_command("清除对话", aliases={"失忆"}, rule=Rule(rule_check_trust) & Rule(rule_check_enable))
 
 
 @CleanMessages.handle()
@@ -305,9 +285,7 @@ async def clean_message(matcher: Matcher, event: MessageCreatedEvent):
     if channel_id in context_dict:
         quantity = len(context_dict[channel_id]["messages"])
         context_dict[channel_id]["messages"] = []
-        await matcher.finish(
-            create_quote_or_at_message(event) + f"已清除 {quantity} 条对话记录."
-        )
+        await matcher.finish(create_quote_or_at_message(event) + f"已清除 {quantity} 条对话记录.")
     await matcher.finish(create_quote_or_at_message(event) + "没有对话记录")
 
 

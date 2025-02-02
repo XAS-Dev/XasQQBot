@@ -1,16 +1,15 @@
 import hashlib
-import time
 import re
+import time
 
-from nonebot import get_driver
-from nonebot.rule import Rule
-from nonebot.plugin import PluginMetadata, require
-from nonebot.plugin import on_message
-from nonebot.params import EventPlainText
-from nonebot.matcher import Matcher
-from nonebot.adapters.satori.event import MessageCreatedEvent
-from nonebot.adapters.satori.message import MessageSegment, Message
 import httpx
+from nonebot import get_plugin_config
+from nonebot.adapters.satori.event import MessageCreatedEvent
+from nonebot.adapters.satori.message import Message, MessageSegment
+from nonebot.matcher import Matcher
+from nonebot.params import EventPlainText
+from nonebot.plugin import PluginMetadata, on_message, require
+from nonebot.rule import Rule
 
 from .config import Config
 
@@ -27,8 +26,7 @@ __plugin_meta__ = PluginMetadata(
     config=Config,
 )
 
-global_config = get_driver().config
-config = Config.parse_obj(global_config)
+config = get_plugin_config(Config)
 host_mode = config.github_opengraph_host_mode
 opengraph_githubassets_host = config.xas_github_opengraph_githubassets_host
 
@@ -59,12 +57,8 @@ async def _(
                 headers={"Host": "opengraph.githubassets.com"},
             )
         else:
-            response = await client.get(
-                f"https://opengraph.githubassets.com/{hashlib.sha256(str(time.time()).encode())}/{result[0]}"
-            )
+            response = await client.get(f"https://opengraph.githubassets.com/{hashlib.sha256(str(time.time()).encode())}/{result[0]}")
         result_message = Message()
         result_message.append(create_quote_or_at_message(event))
-        result_message.append(
-            MessageSegment.image(raw=response.content, mime="image/png")
-        )
+        result_message.append(MessageSegment.image(raw=response.content, mime="image/png"))
         await matcher.finish(result_message)

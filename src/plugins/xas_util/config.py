@@ -1,9 +1,9 @@
 from typing import List
 
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel
 
 
-class Config(BaseModel, extra=Extra.ignore):
+class Config(BaseModel):
     """Plugin Config Here"""
 
     # 信任的群聊/私聊, 允许不用@触发指令, 列表中为群号或“private:”加QQ号.

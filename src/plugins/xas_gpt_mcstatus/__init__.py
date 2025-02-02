@@ -1,9 +1,8 @@
-from typing_extensions import Optional
-
-from nonebot import get_driver, require, logger
-from nonebot.plugin import PluginMetadata
 from mcstatus import JavaServer
 from mcstatus.status_response import JavaStatusResponse
+from nonebot import get_plugin_config, logger, require
+from nonebot.plugin import PluginMetadata
+from typing_extensions import Optional
 
 from .config import Config
 
@@ -15,8 +14,8 @@ from nonebot_plugin_apscheduler import (  # pylint: disable=C0411,C0413,E0402  #
 require("xas_chatgpt")
 
 from ..xas_chatgpt import (  # pylint: disable=C0411,C0413,E0402  # noqa: E402
-    on_chat_ask,
     ChatAskEvent,
+    on_chat_ask,
 )
 
 __plugin_meta__ = PluginMetadata(
@@ -26,8 +25,8 @@ __plugin_meta__ = PluginMetadata(
     config=Config,
 )
 
-global_config = get_driver().config
-config = Config.parse_obj(global_config)
+
+config = get_plugin_config(Config)
 server_host = config.xas_gpt_mcstatus_server_host
 server_port = config.xas_gpt_mcstatus_server_port
 

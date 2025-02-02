@@ -1,14 +1,13 @@
 from typing import List, Tuple
 
+from nonebot import get_plugin_config
+from nonebot.log import logger
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
-from nonebot import get_driver
-from nonebot.log import logger
 
 from .config import Config
 
-global_config = get_driver().config
-config = Config.parse_obj(global_config)
+config = get_plugin_config(Config)
 
 
 class ChatGPT:
@@ -20,7 +19,6 @@ class ChatGPT:
         system_prompt: str,
         model: str = "gpt-3.5-turbo",
     ) -> Tuple[str, List[ChatCompletionMessageParam]]:
-
         client = AsyncOpenAI(
             api_key=config.xas_chatgpt_key,
             base_url=config.xas_chatgpt_api,

@@ -1,13 +1,13 @@
 import asyncio
-import dns.resolver
 from socket import gaierror
-from typing_extensions import Callable
 
-from nonebot import get_driver, get_bot, require
+import dns.resolver
+from mcstatus import JavaServer
+from nonebot import get_bot, get_plugin_config, require
+from nonebot.adapters.satori import Message, MessageSegment
 from nonebot.log import logger
 from nonebot.plugin import PluginMetadata
-from nonebot.adapters.satori import Message, MessageSegment
-from mcstatus import JavaServer
+from typing_extensions import Callable
 
 from .config import Config
 
@@ -23,8 +23,7 @@ __plugin_meta__ = PluginMetadata(
     config=Config,
 )
 
-global_config = get_driver().config
-config = Config.parse_obj(global_config)
+config = get_plugin_config(Config)
 
 groups = config.xas_checkmc_groups
 server_data = config.xas_checkmc_servers
@@ -72,10 +71,7 @@ async def check():
     def add_msg(message_seg: MessageSegment):
         message.append(message_seg)
 
-    tasks = [
-        asyncio.create_task(check_server(server_name, add_msg))
-        for server_name in server_data
-    ]
+    tasks = [asyncio.create_task(check_server(server_name, add_msg)) for server_name in server_data]
     await asyncio.wait(tasks) if tasks else ...
     logger.trace(f"检测完成 -> {status_data}")
     if not message:

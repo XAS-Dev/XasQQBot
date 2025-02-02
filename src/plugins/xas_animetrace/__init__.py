@@ -1,26 +1,25 @@
-from typing import Dict, List, Tuple, Optional
-from io import BytesIO
 import re
+from io import BytesIO
+from typing import Dict, List, Optional, Tuple
 
-from nonebot import get_driver
-from nonebot.plugin import on_command, require
-from nonebot.params import EventMessage, EventPlainText, Depends
-from nonebot.plugin import PluginMetadata
-from nonebot.typing import T_State
-from nonebot.matcher import Matcher
-from nonebot.adapters.satori.message import Message, MessageSegment
-from nonebot.adapters.satori.message import Image as ImageMessage
-from nonebot.adapters.satori.event import MessageCreatedEvent
-from typing_extensions import TypedDict
-from PIL import Image
 import filetype
 import httpx
+from nonebot import get_plugin_config
+from nonebot.adapters.satori.event import MessageCreatedEvent
+from nonebot.adapters.satori.message import Image as ImageMessage
+from nonebot.adapters.satori.message import Message, MessageSegment
+from nonebot.matcher import Matcher
+from nonebot.params import Depends, EventMessage, EventPlainText
+from nonebot.plugin import PluginMetadata, on_command, require
+from nonebot.typing import T_State
+from PIL import Image
+from typing_extensions import TypedDict
 
-from .config import Config, AnimetraceModelConfig
+from .config import AnimetraceModelConfig, Config
 
 xas_util = require("xas_util")
 
-from ..xas_util import (  # pylint: disable=E0402,C0413  # noqa: E402
+from ..xas_util import (  # pylint: disable=C0411,C0413,E0402  # noqa: E402
     create_quote_or_at_message,
     rule_check_trust,
 )
@@ -32,9 +31,7 @@ __plugin_meta__ = PluginMetadata(
     config=Config,
 )
 
-global_config = get_driver().config
-config = Config.parse_obj(global_config)
-models = config.xas_animetrace_model
+config = get_plugin_config(Config)
 
 
 class ApiResultChar(TypedDict):
@@ -105,11 +102,9 @@ def create_trace_result_message(trace_result: ApiResult, original_image: bytes):
     elif len(trace_result["data"]) == 1:
         result_message = Message()
         result_message.append("可能的角色:\n")
-        char_list = sorted(
-            trace_result["data"][0]["char"], key=lambda it: it["acc"], reverse=True
-        )[:5]
+        char_list = sorted(trace_result["data"][0]["char"], key=lambda it: it["acc"], reverse=True)[:5]
         for i, probability in enumerate(char_list):
-            result_message.append(f"{i+1}. {probability['name']}\n")
+            result_message.append(f"{i + 1}. {probability['name']}\n")
             result_message.append(f"    来自: {probability['cartoonname']}\n")
             result_message.append(f"    置信度: {probability['acc']}\n")
         return result_message
@@ -119,13 +114,11 @@ def create_trace_result_message(trace_result: ApiResult, original_image: bytes):
         for char in trace_result["data"]:
             box = tuple(char["box"][:4])
             image_data = clip_image(original_image, box)
-            result_message.append(
-                MessageSegment.image(raw=image_data, mime="image/jpeg")
-            )
+            result_message.append(MessageSegment.image(raw=image_data, mime="image/jpeg"))
             result_message.append("可能的角色:\n")
             char_list = sorted(char["char"], key=lambda it: it["acc"], reverse=True)[:3]
             for i, probability in enumerate(char_list):
-                result_message.append(f"{i+1}. {probability['name']}\n")
+                result_message.append(f"{i + 1}. {probability['name']}\n")
                 result_message.append(f"    来自: {probability['cartoonname']}\n")
                 result_message.append(f"    置信度: {probability['acc']}\n")
         return result_message
@@ -143,7 +136,6 @@ async def post_api(
     image_type,
     model: str,
 ) -> ApiResult:
-
     async with httpx.AsyncClient() as client:
         response = await client.post(
             f"https://aiapiv2.animedb.cn/ai/api/detect?force_one=1&model={model}&ai_detect=0",
@@ -170,11 +162,7 @@ async def depends_image_message(
     event: MessageCreatedEvent,
     message: Message = EventMessage(),
 ) -> Optional[Message]:
-    return message.get("img") or (
-        event.reply
-        and (reply_content := event.reply.data.get("content"))
-        and reply_content.get("img")
-    )  # type: ignore
+    return message.get("img") or (event.reply and (reply_content := event.reply.data.get("content")) and reply_content.get("img"))  # type: ignore
 
 
 @Trace.handle()
@@ -203,25 +191,17 @@ async def got_image(
         await matcher.finish(create_quote_or_at_message(event) + "已结束会话")
 
     if not image_message:
-        await matcher.reject(
-            create_quote_or_at_message(event)
-            + "无法获取图片, 请重新发送. 输入“退出”结束会话."
-        )
+        await matcher.reject(create_quote_or_at_message(event) + "无法获取图片, 请重新发送. 输入“退出”结束会话.")
 
     image_segment: ImageMessage = image_message[0]  # type: ignore
     try:
         image_data = await get_image(image_segment)
     except httpx.HTTPStatusError as e:
-        await matcher.finish(
-            create_quote_or_at_message(event)
-            + f"错误: 无法从QQNT获取资源: {e.response.status_code}"
-        )
+        await matcher.finish(create_quote_or_at_message(event) + f"错误: 无法从QQNT获取资源: {e.response.status_code}")
 
     image_type = filetype.guess(image_data)
     if image_type is None:
-        await matcher.finish(
-            create_quote_or_at_message(event) + "错误: 无法识别图片类型."
-        )
+        await matcher.finish(create_quote_or_at_message(event) + "错误: 无法识别图片类型.")
 
     state["image_data"] = image_data
     state["image_type"] = image_type
@@ -240,10 +220,7 @@ async def got_model(
     if message_text == "退出":
         await matcher.finish(create_quote_or_at_message(event) + "已结束会话")
 
-    if (
-        not re.match("^[0-9]+$", message_text)
-        or (model_index := int(message_text)) not in model_dict
-    ):
+    if not re.match("^[0-9]+$", message_text) or (model_index := int(message_text)) not in model_dict:
         await matcher.reject("请输入正确的序号. 输入“退出”结束会话. ")
 
     model = model_dict[model_index]
@@ -259,7 +236,4 @@ async def got_model(
     except httpx.HTTPStatusError as e:
         await matcher.finish(f"错误: HTTP状态错误: {e.response.status_code}.")
 
-    await matcher.finish(
-        create_quote_or_at_message(event)
-        + create_trace_result_message(trace_result, image_data)
-    )
+    await matcher.finish(create_quote_or_at_message(event) + create_trace_result_message(trace_result, image_data))

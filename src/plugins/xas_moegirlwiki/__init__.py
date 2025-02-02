@@ -2,15 +2,14 @@ import re
 import urllib.parse
 from typing import List
 
-from nonebot import get_driver
-from nonebot.params import CommandArg
-from nonebot.plugin import PluginMetadata
-from nonebot.plugin import on_command
-from nonebot.matcher import Matcher
+import httpx
+from nonebot import get_plugin_config
 from nonebot.adapters.satori.event import MessageCreatedEvent
 from nonebot.adapters.satori.message import Message
+from nonebot.matcher import Matcher
+from nonebot.params import CommandArg
+from nonebot.plugin import PluginMetadata, on_command
 from typing_extensions import TypedDict
-import httpx
 
 from .config import Config
 
@@ -21,8 +20,7 @@ __plugin_meta__ = PluginMetadata(
     config=Config,
 )
 
-global_config = get_driver().config
-config = Config.parse_obj(global_config)
+config = get_plugin_config(Config)
 
 
 class Page(TypedDict):
@@ -70,8 +68,7 @@ async def search(
                 "index": page["index"],
                 "title": page["title"],
                 "categories": [  # type: ignore
-                    (match_result := re.match(r"Category:(.*)", category["title"]))
-                    and "#" + match_result.group(1)
+                    (match_result := re.match(r"Category:(.*)", category["title"])) and "#" + match_result.group(1)
                     for category in page.get("categories", [])
                 ],
             }
@@ -83,12 +80,8 @@ async def search(
     for page in processed_data[:3]:
         print(page)
         result_message.append(f"{page['index']}. {page['title']}\n")
-        result_message.append(
-            f"  tag: {' '.join(page['categories'])}\n" if page["categories"] else ""
-        )
+        result_message.append(f"  tag: {' '.join(page['categories'])}\n" if page["categories"] else "")
         param = f"{page['title']}"
-        result_message.append(
-            f"  https://mzh.moegirl.org.cn/{urllib.parse.quote(param)}\n\n"
-        )
+        result_message.append(f"  https://mzh.moegirl.org.cn/{urllib.parse.quote(param)}\n\n")
 
     await matcher.finish(result_message)

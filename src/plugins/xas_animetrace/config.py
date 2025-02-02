@@ -1,7 +1,7 @@
 from typing import Dict
 
+from pydantic import BaseModel
 from typing_extensions import TypedDict
-from pydantic import BaseModel, Extra
 
 
 class AnimetraceModel(TypedDict):
@@ -14,7 +14,7 @@ class AnimetraceModelConfig(TypedDict):
     game: Dict[str, str]
 
 
-class Config(BaseModel, extra=Extra.ignore):
+class Config(BaseModel):
     """Plugin Config Here"""
 
     xas_animetrace_model: AnimetraceModelConfig = {
