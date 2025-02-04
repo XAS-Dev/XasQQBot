@@ -105,6 +105,13 @@ class ChatGPT:
         if not (reasoning_message or answer_message):
             raise TimeoutError("API繁忙")
 
+        if not reasoning_message:
+            match_result = re.match(r"^<think>(.*)</think>(.*)$", answer_message, flags=re.DOTALL)
+            if not match_result:
+                raise ValueError(f"Invalid response:\n{answer_message}")
+            reasoning_message = match_result.group(1).strip()
+            answer_message = match_result.group(2).strip()
+
         logger.trace("ChatGPT调用结束")
         logger.debug(f"推理过程 -> {reasoning_message}")
         logger.debug(f"原始回答: {answer_message}")
