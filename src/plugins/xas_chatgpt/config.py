@@ -16,3 +16,4 @@ class Config(BaseModel):
         "注意请直接回复消息, 不要包含前缀. "
     )
     xas_chatgpt_context_validity_period: int = 1200
+    xas_chatgpt_retry_timeout: int = 300

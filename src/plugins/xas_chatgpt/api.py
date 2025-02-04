@@ -12,6 +12,7 @@ class ChatInitEvent:
 class ChatAskEvent:
     session_id: str
     message: str
+    try_times: int = 1
 
 
 @dataclass
@@ -35,4 +36,3 @@ def on_chat_ask(listener: Callable[[ChatAskEvent], Coroutine[Any, Any, None]]):
 
 def on_chat_answer(listener: Callable[[ChatAnswerEvent], Coroutine[Any, Any, None]]):
     chat_answer_listener.append(listener)
-

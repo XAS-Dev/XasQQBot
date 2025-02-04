@@ -4,6 +4,7 @@ from asyncio import Lock
 from datetime import datetime, timedelta
 from typing import Dict, List
 
+import httpx
 from nonebot import get_driver, get_plugin_config
 from nonebot.adapters.satori.event import MessageCreatedEvent
 from nonebot.adapters.satori.message import Message
@@ -13,12 +14,10 @@ from nonebot.params import CommandArg, EventPlainText
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata, on_command, on_message, require
 from nonebot.rule import Rule
-from openai import APIConnectionError, InternalServerError
-from openai.types.chat import ChatCompletionMessageParam
 from typing_extensions import TypedDict
 
 from .api import ChatAnswerEvent, ChatAskEvent, ChatInitEvent, chat_answer_listener, chat_ask_listener, chat_init_listener
-from .chatgpt import ChatGPT
+from .chatgpt import ChatCompletionMessage, ChatGPT
 from .config import Config
 
 require("xas_util")
@@ -43,7 +42,7 @@ __plugin_meta__ = PluginMetadata(
 
 class Context(TypedDict):
     system_prompt: str
-    messages: List[ChatCompletionMessageParam]
+    messages: List[ChatCompletionMessage]
     model: str
     last_time: datetime
 
@@ -70,6 +69,7 @@ default_model = config.xas_chatgpt_default_model
 advanced_model = config.xas_chatgpt_advanced_model
 default_prompt = config.xas_chatgpt_default_prompt
 context_validity_period = config.xas_chatgpt_context_validity_period
+retry_timeout = config.xas_chatgpt_retry_timeout
 
 
 def save_system_prompt():
@@ -110,15 +110,15 @@ async def emit_chat_init_event(channel_id: str, system_prompt: str):
     return init_event
 
 
-async def emit_chat_ask_event(channel_id, question: str):
-    ask_event = ChatAskEvent(channel_id, message=question)
+async def emit_chat_ask_event(channel_id, question: str, try_times: int = 1):
+    ask_event = ChatAskEvent(channel_id, question, try_times)
     for listener in chat_ask_listener:
         await listener(ask_event)
     return ask_event
 
 
 async def emit_chat_answer_event(channel_id, answer: str):
-    answer_event = ChatAnswerEvent(channel_id, message=answer)
+    answer_event = ChatAnswerEvent(channel_id, answer)
     for listener in chat_answer_listener:
         await listener(answer_event)
     return answer_event
@@ -164,49 +164,65 @@ async def chat(
     message_text=EventPlainText(),
 ):
     logger.success("触发ChatGPT")
+    # get channel_id
     channel_id: str = event.channel and event.channel.id  # type: ignore
-
+    # lock
     lock_dict.setdefault(channel_id, Lock())
-    logger.trace(f"{channel_id} 已加锁.")
+    if lock_dict[channel_id].locked():
+        logger.info(f"{channel_id} 正在聊天, 等待中")
     await lock_dict[channel_id].acquire()
-
+    logger.trace(f"{channel_id} 已加锁.")
+    # get context
     if channel_id not in context_dict or context_dict[channel_id]["last_time"] + timedelta(seconds=context_validity_period) < datetime.now():
         await set_default_context(channel_id)
         logger.debug("超时或不存在上下文, 上下文已设置为默认值.")
     context_dict[channel_id]["last_time"] = datetime.now()  # 更新上下文时间
-
+    # get message
     system_prompt = context_dict[channel_id]["system_prompt"]
     messages = context_dict[channel_id]["messages"]
     model = context_dict[channel_id]["model"]
     name = (event.member and event.member.nick) or (event.user and event.user.nick or event.user.name)
-    question = f"{name}({event.get_user_id()}): {message_text}"
-    # emit ask event
-    event_result = await emit_chat_ask_event(channel_id, question)
-    question = event_result.message
     # chat with chatgpt
-    try:
-        answer, new_messages = await ChatGPT.chat(
-            question,
-            messages,
-            system_prompt,
-            model,
-        )
-    except APIConnectionError as e:
-        logger.error(create_quote_or_at_message(event) + "错误: API连接错误." + e.message)
-        await matcher.finish(create_quote_or_at_message(event) + "错误: API连接错误.")
-    except InternalServerError as e:
-        logger.error(create_quote_or_at_message(event) + "错误: 服务器内部错误." + e.message)
-        await matcher.finish(create_quote_or_at_message(event) + "错误: 服务器内部错误.")
-    finally:
-        lock_dict[channel_id].release()
-        logger.trace(f"{channel_id} 已解锁.")
+    start_time = datetime.now()
+    try_times = 0
+    error_messages = []
+    while True:  # 120秒内尽可能多的尝试, 直到成功
+        if (datetime.now() - start_time) > timedelta(seconds=retry_timeout):
+            # 超时
+            lock_dict[channel_id].release()
+            logger.trace(f"{channel_id} 已解锁.")
+            await matcher.finish(create_quote_or_at_message(event) + "对话超时, 请重新开始.\n" + "\n".join(error_messages))
+        try_times += 1
+        logger.debug(f"第{try_times}次尝试.")
+        # emit ask event
+        question = f"{name}({event.get_user_id()}): {message_text}"
+        event_result = await emit_chat_ask_event(channel_id, question, try_times)
+        question = event_result.message
+        try:
+            answer, new_messages = await ChatGPT.chat(
+                question,
+                messages,
+                system_prompt,
+                model,
+                channel_id,
+            )
+            break
+        except httpx.ReadTimeout as e:
+            logger.error("错误: API超时." + str(e))
+            error_messages.append("错误: API超时.")
+        except TimeoutError as e:
+            logger.error("错误: API繁忙." + str(e))
+            error_messages.append("错误: API繁忙.")
+    # finish chat
+    logger.success(f"调用ChatGPT成功, 耗时: {(datetime.now() - start_time).seconds}, 尝试了 {try_times} 次.")
+    lock_dict[channel_id].release()
+    logger.trace(f"{channel_id} 已解锁.")
     context_dict[channel_id]["messages"] = new_messages
     # emit answer event
     event_result = await emit_chat_answer_event(channel_id, answer)
     answer = event_result.message
-
-    logger.debug(f"最终回复: {answer}")
-    logger.success(create_quote_or_at_message(event) + answer)
+    # send message
+    logger.success(f"最终回复: {answer}")
     await matcher.finish(create_quote_or_at_message(event) + answer)
 
 
