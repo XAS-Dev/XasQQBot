@@ -213,6 +213,11 @@ async def chat(
         except TimeoutError as e:
             logger.error("错误: API繁忙." + str(e))
             error_messages.append("错误: API繁忙.")
+        except Exception as e:
+            lock_dict[channel_id].release()
+            logger.trace(f"{channel_id} 已解锁.")
+            raise e
+
     # finish chat
     logger.success(f"调用ChatGPT成功, 耗时: {(datetime.now() - start_time).seconds}, 尝试了 {try_times} 次.")
     lock_dict[channel_id].release()

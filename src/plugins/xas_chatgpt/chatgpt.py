@@ -109,6 +109,7 @@ class ChatGPT:
             match_result = re.match(r"^<think>(.*)</think>(.*)$", answer_message, flags=re.DOTALL)
             if not match_result:
                 raise ValueError(f"Invalid response:\n{answer_message}")
+            logger.trace("回复内容包含think标签")
             reasoning_message = match_result.group(1).strip()
             answer_message = match_result.group(2).strip()
 
