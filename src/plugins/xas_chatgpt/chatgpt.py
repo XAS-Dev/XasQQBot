@@ -83,10 +83,10 @@ class ChatGPT:
                         if not line:
                             pbar.update(0)
                             continue
-                        result = re.match(r"^data: (.*)$", line)
-                        if result == ": keep-alive":
+                        if line == ": keep-alive":
                             pbar.update(0)
                             continue
+                        result = re.match(r"^data: (.*)$", line)
                         if not result:
                             raise ValueError(f"Invalid response: {line}")
                         line_data = result.group(1)
